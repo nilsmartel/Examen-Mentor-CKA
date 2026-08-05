@@ -90,6 +90,8 @@ On success push the interval out (~2d → ~5d → ~10d); on a miss reset to ~1d.
 |----------------|:------:|:-------------:|:-----------:|:--------:|
 | `rollout undo --to-revision` is absolute, not relative; undo re-numbers the promoted RS to the new highest revision | 3.1 | 2026-08-05 | 2026-08-10 | 5d |
 | Editing a live pod doesn't self-heal instantly — it reverts only on next pod replacement, not on edit | 3.1 | 2026-08-05 | 2026-08-06 | 1d |
+| env vars from ConfigMap/Secret are captured at pod start; need `kubectl rollout restart` to pick up changes | 3.2 | 2026-08-05 | 2026-08-07 | 2d |
+| Mounted ConfigMap/Secret volumes update in place (no restart), env vars don't | 3.2 | 2026-08-05 | 2026-08-07 | 2d |
 
 ## ⚠️ Weak spots
 
