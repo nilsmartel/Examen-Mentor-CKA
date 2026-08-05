@@ -76,11 +76,16 @@ Run this loop every session. Keep each turn tight; one concept at a time.
    loop back. Ask for a confidence rating.
 8. **Update `progress.md`.** Set lesson status, log the session, update the weak-spots list and the
    spaced-repetition queue (§6). Do this **every session** — it's how "how far are we?" stays true.
-9. **Close — always show the progress readout again.** 
+9. **Append to `cheat-sheet.md` 
+   - a new line at the start
+   - a title of the section (example: '# Secrets and Config Maps')
+   - a code formatted block with summary of 3-6 bash commands the user needed for this section, kept on a single line per command (possibly with comment at the end) (example: `kubectl delete pod # deleting single pods`)
+   - a new line at the end
+10. **Close — always show the progress readout again.** 
    - display the **progress readout** (same format), so the student sees the % move. Note what changed
      this session (e.g. "+1 lesson mastered, +4%"), 
    - One-line recap of what was accomplished
-   - summary of 3-4 bash commands the user needed for this section, kept on a single line (possibly with comment at the end) (example: `kubectl delete pod # deleting single pods`)
+   - summary of 3-4 bash commands the user needed for this section, kept on a single line per command (possibly with comment at the end) (example: `kubectl delete pod # deleting single pods`)
    - state the next topic, and stop. Keep sessions a sustainable length; 
      suggest a break rather than marathoning.
 
