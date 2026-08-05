@@ -4,11 +4,11 @@
 > Status: `⬜ Not started` · `🟡 In progress` · `✅ Mastered` (only ✅ counts toward completion).
 > Overall % is **weighted by exam domain** — see the formula at the bottom.
 
-## 📊 Overall: ~0% complete  *(weighted by exam domain — see formula at bottom)*
+## 📊 Overall: ~3% complete  *(weighted by exam domain — see formula at bottom)*
 
-`░░░░░░░░░░░░░░░░░░░░` 0 / 27 lessons mastered · the bar tracks **weighted %**, not the raw lesson count
+`█░░░░░░░░░░░░░░░░░░░` 1 / 27 lessons mastered · the bar tracks **weighted %**, not the raw lesson count
 
-**Strong:** _(none yet)_ · **Weak / next up:** _(run the first-session diagnostic)_
+**Strong:** Workloads & Scheduling (1/5) · **Weak / next up:** Cluster Architecture (0/8), Troubleshooting (0/5) — biggest domains, most points on the table
 
 ---
 
@@ -16,6 +16,11 @@
 
 - Experience at start: comfortable with pods, deployments, replicasets, services. New to
   cluster admin & troubleshooting depth.
+- Background: holds a (now ~3-years-stale) CKAD. First-session diagnostic (2026-08-04) showed
+  solid conceptual foundations across rollouts, ConfigMaps/Secrets, Services, and basic RBAC —
+  rusty on exact command syntax rather than concepts. Good troubleshooting instincts once
+  prompted Socratically. Can move faster through foundation topics than a true beginner; skip
+  ground-zero explanations, focus on operational verbs, exact syntax, and exam traps.
 - Pacing: **adaptive** (mentor chooses next topic).
 - Target exam date: _not set_ (ask the learner; if set, note it here and bias pacing).
 - Environment: minikube + podman on macOS (see `reference/environment-setup.md`).
@@ -50,7 +55,7 @@
 
 | Lesson | Status | Last touched | Notes |
 |--------|:------:|:------------:|-------|
-| 3.1 Deployments, rollouts & rollbacks | ⬜ | — | |
+| 3.1 Deployments, rollouts & rollbacks | ✅ | 2026-08-04 | Diagnostic showed strong prior knowledge; lab (create→update→break→undo→strategy knobs→restart) completed clean. Confidence self-rated 3/5 — re-quiz syntax details. |
 | 3.2 ConfigMaps & Secrets | ⬜ | — | |
 | 3.3 Autoscaling (HPA) | ⬜ | — | |
 | 3.4 Self-healing primitives | ⬜ | — | |
@@ -83,12 +88,18 @@ On success push the interval out (~2d → ~5d → ~10d); on a miss reset to ~1d.
 
 | Item / concept | Lesson | Last reviewed | Next review | Interval |
 |----------------|:------:|:-------------:|:-----------:|:--------:|
-| _(none yet)_ | | | | |
+| `rollout undo --to-revision` is absolute, not relative; undo re-numbers the promoted RS to the new highest revision | 3.1 | 2026-08-05 | 2026-08-10 | 5d |
+| Editing a live pod doesn't self-heal instantly — it reverts only on next pod replacement, not on edit | 3.1 | 2026-08-05 | 2026-08-06 | 1d |
 
 ## ⚠️ Weak spots
 
 _(Mentor: log specific misconceptions or repeated errors here, e.g. "confuses NodePort range",
 "forgets to switch context". Target these with deliberate practice.)_
+
+- **Pending vs. image-pull failures (2026-08-04):** initially reached for "check image pull" on a
+  `Pending` pod before scheduling. Self-corrected well once prompted Socratically (scheduler must
+  place the pod before kubelet can pull anything). Reinforce during 5.1/3.5 — this is a classic
+  exam trap when skimming `kubectl get pods` output.
 
 ---
 
@@ -96,7 +107,7 @@ _(Mentor: log specific misconceptions or repeated errors here, e.g. "confuses No
 
 | Date | Topics covered | Labs done | Outcome / notes |
 |------|----------------|-----------|-----------------|
-| _(none yet)_ | | | |
+| 2026-08-04 | First-session diagnostic (rollouts, ConfigMaps/Secrets, Services, RBAC, Pending-vs-troubleshooting) + 3.1 Deployments/rollouts | lab-3.1-rollouts (full: update, break, undo, strategy knobs, restart) | 3.1 mastered ✅. Strong foundation confirmed across the board; syntax rusty but concepts solid. Confidence 3/5 — queued for 2-day recall. |
 
 ---
 
