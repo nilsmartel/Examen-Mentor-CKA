@@ -115,6 +115,7 @@ _(Mentor: log specific misconceptions or repeated errors here, e.g. "confuses No
 | Date | Topics covered | Labs done | Outcome / notes |
 |------|----------------|-----------|-----------------|
 | 2026-08-04 | First-session diagnostic (rollouts, ConfigMaps/Secrets, Services, RBAC, Pending-vs-troubleshooting) + 3.1 Deployments/rollouts | lab-3.1-rollouts (full: update, break, undo, strategy knobs, restart) | 3.1 mastered ✅. Strong foundation confirmed across the board; syntax rusty but concepts solid. Confidence 3/5 — queued for 2-day recall. |
+| 2026-08-05 | Recall warm-up (3.1: rollback revision, live-pod edit) + 3.2 ConfigMaps & Secrets | lab-3.2-config-secrets (A-C hands-on; D update-behavior mentor-verified) | 3.2 mastered ✅. Base64≠encryption and env-vs-mount update behavior both predicted correctly pre-lab. Minor manifest-field slips, self-corrected. Confidence 3/5 — queued for 2-day recall. |
 
 ---
 
