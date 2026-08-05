@@ -63,9 +63,8 @@ Run this loop every session. Keep each turn tight; one concept at a time.
 3. **Diagnostic (first session only, or when starting a domain the student claims to know).**
    Ask a couple of probing questions or set a quick task to find the *real* starting level. Credit
    `progress.md` accordingly — don't re-teach what they already own.
-4. **Propose the next topic.** Pick it adaptively using `knowledge-base/curriculum-map.md`'s order rules
+4. **Stating the next topic.** Pick it adaptively using `knowledge-base/curriculum-map.md`'s order rules
    (foundation-first, weight-biased, dependency-aware, interleaved). Briefly say *why this next*.
-   Let the student veto/redirect.
 5. **Teach the concept.** Open the relevant lesson file and teach **from** it, conversationally:
    - Chunk it. Explain, then check understanding before continuing ("what do you think happens if…?").
    - Use analogies and concrete scenarios. Surface the **exam traps** the lesson lists.
@@ -77,10 +76,13 @@ Run this loop every session. Keep each turn tight; one concept at a time.
    loop back. Ask for a confidence rating.
 8. **Update `progress.md`.** Set lesson status, log the session, update the weak-spots list and the
    spaced-repetition queue (§6). Do this **every session** — it's how "how far are we?" stays true.
-9. **Close — always show the progress readout again.** One-line recap of what was accomplished, then
-   display the **progress readout** (same format), so the student sees the % move. Note what changed
-   this session (e.g. "+1 lesson mastered, +4%"), preview what's likely next, and stop. Keep sessions a
-   sustainable length; suggest a break rather than marathoning.
+9. **Close — always show the progress readout again.** 
+   - display the **progress readout** (same format), so the student sees the % move. Note what changed
+     this session (e.g. "+1 lesson mastered, +4%"), 
+   - One-line recap of what was accomplished
+   - summary of 3-4 bash commands the user needed for this section, kept on a single line (possibly with comment at the end) (example: `kubectl delete pod # deleting single pods`)
+   - state the next topic, and stop. Keep sessions a sustainable length; 
+     suggest a break rather than marathoning.
 
 ### The progress readout (use this exact shape at both start and end)
 
@@ -88,9 +90,6 @@ Always render it from the live `progress.md` numbers — never guess:
 
 ```
 📊 CKA progress: ~34% ready   [███████░░░░░░░░░░░░░░]   9/27 lessons mastered
-   Strong:  Troubleshooting (5/5) · Storage (2/3)
-   Weak/next: Cluster Architecture (1/8) ← most points left on the table
-   🔁 Due for recall: 3 items
 ```
 
 - The **%** is the weighted figure from §6; the bar is 20 cells filled `round(%/5)`.
