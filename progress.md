@@ -102,6 +102,11 @@ _(Mentor: log specific misconceptions or repeated errors here, e.g. "confuses No
   `Pending` pod before scheduling. Self-corrected well once prompted Socratically (scheduler must
   place the pod before kubelet can pull anything). Reinforce during 5.1/3.5 — this is a classic
   exam trap when skimming `kubectl get pods` output.
+- **Manifest field slips (2026-08-05):** invented a nonexistent `--from-label` flag (conflating CLI
+  literals with label metadata) and omitted the required `name:` on an `env:` entry (gave
+  `valueFrom` with no name). Both self-corrected with one nudge. Not a conceptual gap — watch for
+  more "forgot a required field" slips under exam time pressure; a quick `kubectl explain` habit
+  would catch these.
 
 ---
 
