@@ -56,7 +56,7 @@
 | Lesson | Status | Last touched | Notes |
 |--------|:------:|:------------:|-------|
 | 3.1 Deployments, rollouts & rollbacks | ✅ | 2026-08-04 | Diagnostic showed strong prior knowledge; lab (create→update→break→undo→strategy knobs→restart) completed clean. Confidence self-rated 3/5 — re-quiz syntax details. |
-| 3.2 ConfigMaps & Secrets | ⬜ | — | |
+| 3.2 ConfigMaps & Secrets | ✅ | 2026-08-05 | Concepts solid immediately (base64≠encryption, env-vs-mount update behavior predicted correctly). Lab parts A-C hands-on (create, env injection, mounted files); part D update-behavior verified by mentor at student's request. Syntax slips en route: invented `--from-label` flag, missing required `name:` on an `env:` entry. Confidence 3/5. |
 | 3.3 Autoscaling (HPA) | ⬜ | — | |
 | 3.4 Self-healing primitives | ⬜ | — | |
 | 3.5 Scheduling (affinity, taints, limits) | ⬜ | — | |
