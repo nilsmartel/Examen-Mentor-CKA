@@ -4,11 +4,11 @@
 > Status: `⬜ Not started` · `🟡 In progress` · `✅ Mastered` (only ✅ counts toward completion).
 > Overall % is **weighted by exam domain** — see the formula at the bottom.
 
-## 📊 Overall: ~6% complete  *(weighted by exam domain — see formula at bottom)*
+## 📊 Overall: ~9% complete  *(weighted by exam domain — see formula at bottom)*
 
-`█░░░░░░░░░░░░░░░░░░░` 2 / 27 lessons mastered · the bar tracks **weighted %**, not the raw lesson count
+`██░░░░░░░░░░░░░░░░░░` 3 / 27 lessons mastered · the bar tracks **weighted %**, not the raw lesson count
 
-**Strong:** Workloads & Scheduling (2/5) · **Weak / next up:** Cluster Architecture (0/8), Troubleshooting (0/5) — biggest domains, most points on the table
+**Strong:** Workloads & Scheduling (2/5), Services & Networking foundations started (1/6) · **Weak / next up:** Cluster Architecture (0/8), Troubleshooting (0/5) — biggest domains, most points on the table
 
 ---
 
@@ -44,7 +44,7 @@
 
 | Lesson | Status | Last touched | Notes |
 |--------|:------:|:------------:|-------|
-| 2.1 Pod connectivity & network model | ⬜ | — | |
+| 2.1 Pod connectivity & network model | ✅ | 2026-08-05 | Proved all 4 model rules hands-on (distinct pod IPs, cross-pod curl by IP, ephemeral IP on recreate, shared-netns via localhost). Break-it/fix-it: two-nginx port-80 collision → "Address already in use" → split into separate pods. Self-tests passed; wobbles: said "CDI" for CNI (recapped), and didn't know Service ClusterIP is virtual/kube-proxy-translated (clarified). Confidence 3/5. |
 | 2.2 Services & endpoints | ⬜ | — | |
 | 2.3 Ingress controllers & resources | ⬜ | — | |
 | 2.4 Gateway API | ⬜ | — | |
@@ -90,8 +90,11 @@ On success push the interval out (~2d → ~5d → ~10d); on a miss reset to ~1d.
 |----------------|:------:|:-------------:|:-----------:|:--------:|
 | `rollout undo --to-revision` is absolute, not relative; undo re-numbers the promoted RS to the new highest revision | 3.1 | 2026-08-05 | 2026-08-10 | 5d |
 | Editing a live pod doesn't self-heal instantly — it reverts only on next pod replacement, not on edit | 3.1 | 2026-08-05 | 2026-08-06 | 1d |
-| env vars from ConfigMap/Secret are captured at pod start; need `kubectl rollout restart` to pick up changes | 3.2 | 2026-08-05 | 2026-08-07 | 2d |
+| env vars from ConfigMap/Secret are captured at pod start; need `kubectl rollout restart` to pick up changes | 3.2 | 2026-08-05 | 2026-08-10 | 5d |
 | Mounted ConfigMap/Secret volumes update in place (no restart), env vars don't | 3.2 | 2026-08-05 | 2026-08-07 | 2d |
+| No CNI → nodes `NotReady`; CNI broken later → pods `ContainerCreating`. Fix = apply/repair CNI manifest, not restart apiserver/kubelet | 2.1 | 2026-08-05 | 2026-08-07 | 2d |
+| Service ClusterIP is virtual (no real interface); kube-proxy translates it to a pod IP. Pod IP is a real endpoint | 2.1 | 2026-08-05 | 2026-08-07 | 2d |
+| Pod IPs are ephemeral (new IP on recreate) → never hardcode; use a Service for a stable VIP/DNS | 2.1 | 2026-08-05 | 2026-08-08 | 3d |
 
 ## ⚠️ Weak spots
 
@@ -116,6 +119,7 @@ _(Mentor: log specific misconceptions or repeated errors here, e.g. "confuses No
 |------|----------------|-----------|-----------------|
 | 2026-08-04 | First-session diagnostic (rollouts, ConfigMaps/Secrets, Services, RBAC, Pending-vs-troubleshooting) + 3.1 Deployments/rollouts | lab-3.1-rollouts (full: update, break, undo, strategy knobs, restart) | 3.1 mastered ✅. Strong foundation confirmed across the board; syntax rusty but concepts solid. Confidence 3/5 — queued for 2-day recall. |
 | 2026-08-05 | Recall warm-up (3.1: rollback revision, live-pod edit) + 3.2 ConfigMaps & Secrets | lab-3.2-config-secrets (A-C hands-on; D update-behavior mentor-verified) | 3.2 mastered ✅. Base64≠encryption and env-vs-mount update behavior both predicted correctly pre-lab. Minor manifest-field slips, self-corrected. Confidence 3/5 — queued for 2-day recall. |
+| 2026-08-05 | Ad-hoc recall (3.1 rollout cmds, 3.2 env-var staleness) + 2.1 Pod connectivity & network model (CIDR/NAT/flat-network explained from scratch) | lab-2.1-pod-connectivity (A cross-pod curl by IP, B ephemeral IPs, C shared netns; break-it/fix-it: two-nginx port-80 collision) | 2.1 mastered ✅. Productive struggle — initially doubted pods have IPs, disproved own hypothesis via `get pods -o wide`. Needed CNI taught directly (didn't know the component). Wobbles: "CDI" for CNI; unaware Service IP is virtual. Confidence 3/5. |
 
 ---
 

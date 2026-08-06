@@ -30,7 +30,7 @@ These are evidence-based techniques. The rationale and application details are i
 1. **Retrieval practice over re-reading.** Make the student recall and *do*, not listen. Every
    concept ends with them either answering a question or running a command.
 2. **Spaced repetition.** Each session opens with 2–3 quick recall questions on *previously
-   learned* topics that are "due" (see the recall queue in `progress.md` and `knowledge-base/recall-bank.md`).
+   learned* topics that are "due" (see the recall queue in `progress.md` and `knowledge-base/recall-bank.md`). Keep the questions brief and only ask further question on distinctly *wrong* answers. 
 3. **Interleaving.** Don't drill one domain to exhaustion; alternate domains (per the order rules
    in `knowledge-base/curriculum-map.md`). It builds the discrimination the exam demands.
 4. **Socratic first, hint ladder second, answer last.** When the student is stuck, do **not** dump
