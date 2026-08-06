@@ -4,11 +4,11 @@
 > Status: `⬜ Not started` · `🟡 In progress` · `✅ Mastered` (only ✅ counts toward completion).
 > Overall % is **weighted by exam domain** — see the formula at the bottom.
 
-## 📊 Overall: ~9% complete  *(weighted by exam domain — see formula at bottom)*
+## 📊 Overall: ~13% complete  *(weighted by exam domain — see formula at bottom)*
 
-`██░░░░░░░░░░░░░░░░░░` 3 / 27 lessons mastered · the bar tracks **weighted %**, not the raw lesson count
+`███░░░░░░░░░░░░░░░░░` 4 / 27 lessons mastered · the bar tracks **weighted %**, not the raw lesson count
 
-**Strong:** Workloads & Scheduling (2/5), Services & Networking foundations started (1/6) · **Weak / next up:** Cluster Architecture (0/8), Troubleshooting (0/5) — biggest domains, most points on the table
+**Strong:** Workloads & Scheduling (2/5), Services & Networking building (2/6: pod model + Services) · **Weak / next up:** Cluster Architecture (0/8), Troubleshooting (0/5) — biggest domains, most points on the table
 
 ---
 
@@ -45,7 +45,7 @@
 | Lesson | Status | Last touched | Notes |
 |--------|:------:|:------------:|-------|
 | 2.1 Pod connectivity & network model | ✅ | 2026-08-05 | Proved all 4 model rules hands-on (distinct pod IPs, cross-pod curl by IP, ephemeral IP on recreate, shared-netns via localhost). Break-it/fix-it: two-nginx port-80 collision → "Address already in use" → split into separate pods. Self-tests passed; wobbles: said "CDI" for CNI (recapped), and didn't know Service ClusterIP is virtual/kube-proxy-translated (clarified). Confidence 3/5. |
-| 2.2 Services & endpoints | ⬜ | — | |
+| 2.2 Services & endpoints | ✅ | 2026-08-06 | Derived the whole model well. Nailed the chain (Service→selector→Ready pods→EndpointSlice→kube-proxy→pod) and both failure modes: empty ep = selector/readiness; populated-but-refused = wrong targetPort (verified hands-on via patch to 8080). Labs A–D done incl. two break/fix. Strong tangents self-driven: netns/port-sharing recap, EndpointSlice naming (<svc>-rand, find by label), port/targetPort/nodePort trichotomy, headless (clusterIP:None) vs hardcoded-IP, and derived the operator/label read-write-split pattern unprompted (previews 1.8). Brief StatefulSet intro given. Confidence 4/5. |
 | 2.3 Ingress controllers & resources | ⬜ | — | |
 | 2.4 Gateway API | ⬜ | — | |
 | 2.5 Network Policies | ⬜ | — | |
@@ -89,7 +89,7 @@ On success push the interval out (~2d → ~5d → ~10d); on a miss reset to ~1d.
 | Item / concept | Lesson | Last reviewed | Next review | Interval |
 |----------------|:------:|:-------------:|:-----------:|:--------:|
 | `rollout undo --to-revision` is absolute, not relative; undo re-numbers the promoted RS to the new highest revision | 3.1 | 2026-08-05 | 2026-08-10 | 5d |
-| Editing a live pod doesn't self-heal instantly — it reverts only on next pod replacement, not on edit | 3.1 | 2026-08-05 | 2026-08-06 | 1d |
+| Editing a live pod doesn't self-heal instantly — RS reconciles pod *count* not spec; reverts only on pod *replacement* | 3.1 | 2026-08-06 | 2026-08-08 | 2d |
 | env vars from ConfigMap/Secret are captured at pod start; need `kubectl rollout restart` to pick up changes | 3.2 | 2026-08-05 | 2026-08-10 | 5d |
 | Mounted ConfigMap/Secret volumes update in place (no restart), env vars don't | 3.2 | 2026-08-05 | 2026-08-07 | 2d |
 | No CNI → nodes `NotReady`; CNI broken later → pods `ContainerCreating`. Fix = apply/repair CNI manifest, not restart apiserver/kubelet | 2.1 | 2026-08-05 | 2026-08-07 | 2d |
