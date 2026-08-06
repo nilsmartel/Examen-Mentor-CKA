@@ -1,4 +1,4 @@
-# CKA Study Mentor
+# Examen Mentor CKA
 
 An interactive, hands-on tutor that coaches you through the **Certified Kubernetes Administrator
 (CKA)** exam — powered by Claude Code in this repository. You learn by *talking to the mentor and
