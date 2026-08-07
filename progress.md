@@ -4,11 +4,11 @@
 > Status: `⬜ Not started` · `🟡 In progress` · `✅ Mastered` (only ✅ counts toward completion).
 > Overall % is **weighted by exam domain** — see the formula at the bottom.
 
-## 📊 Overall: ~13% complete  *(weighted by exam domain — see formula at bottom)*
+## 📊 Overall: ~16% complete  *(weighted by exam domain — see formula at bottom)*
 
-`███░░░░░░░░░░░░░░░░░` 4 / 27 lessons mastered · the bar tracks **weighted %**, not the raw lesson count
+`███░░░░░░░░░░░░░░░░░` 5 / 27 lessons mastered · the bar tracks **weighted %**, not the raw lesson count
 
-**Strong:** Workloads & Scheduling (2/5), Services & Networking building (2/6: pod model + Services) · **Weak / next up:** Cluster Architecture (0/8), Troubleshooting (0/5) — biggest domains, most points on the table
+**Strong:** Workloads & Scheduling (2/5), Services & Networking building (2/6: pod model + Services), RBAC now solid (1/8) · **Weak / next up:** Cluster Architecture (1/8 — 7 to go, incl. etcd/upgrades/HA), Troubleshooting (0/5) — biggest domains, most points on the table
 
 ---
 
