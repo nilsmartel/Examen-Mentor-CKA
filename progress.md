@@ -99,6 +99,10 @@ On success push the interval out (~2d → ~5d → ~10d); on a miss reset to ~1d.
 | Empty endpoints = selector mismatch OR pods not Ready; populated endpoints but "refused" = wrong targetPort | 2.2 | 2026-08-06 | 2026-08-08 | 2d |
 | 3 ports: port (svc, client-facing) / targetPort (pod's real listen port, must match app) / nodePort (external 3xxxx) | 2.2 | 2026-08-06 | 2026-08-08 | 2d |
 | Headless Service (clusterIP:None) = no VIP; DNS returns pod IPs; +StatefulSet gives stable per-pod names (web-0.web…) | 2.2 | 2026-08-06 | 2026-08-08 | 2d |
+| Role/RoleBinding are namespaced; cluster-scoped resources (nodes, PVs, namespaces) REQUIRE ClusterRole+ClusterRoleBinding — a Role can't grant them. The binding sets the scope, the role sets the powers | 1.1 | 2026-08-07 | 2026-08-09 | 2d |
+| `auth can-i` uses `--as` (impersonate); `--user` picks a kubeconfig entry (→ "does not exist"). can-i never errors (default-deny); the real request gives a 403 naming group/resource/ns/verb | 1.1 | 2026-08-07 | 2026-08-09 | 2d |
+| Wrong apiGroup silently grants nothing: deployments=`apps`, pods/configmaps/nodes=core `""`. Imperative `create role --resource=` auto-resolves the group; hand-written YAML is where the trap bites | 1.1 | 2026-08-07 | 2026-08-09 | 2d |
+| SA identity in bindings/impersonation = `system:serviceaccount:<ns>:<name>`; SAs are real namespaced objects (fully-qualified), Users/Groups are just trusted strings (no object). `edit` is NOT a verb → use `update`/`patch` | 1.1 | 2026-08-07 | 2026-08-09 | 2d |
 
 ## ⚠️ Weak spots
 
