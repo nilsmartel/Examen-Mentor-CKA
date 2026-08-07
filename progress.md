@@ -31,7 +31,7 @@
 
 | Lesson | Status | Last touched | Notes |
 |--------|:------:|:------------:|-------|
-| 1.1 RBAC | 🟡 | 2026-08-06 | Diagnostic (theory only, no lab yet). Strong prior model: Roles = verbs on resources, bindings attach roles to subjects, SAs = machine identities, `can-i` tests access. Corrected 2 things: (a) RoleBinding subjects = Users/Groups/SAs not just SAs; (b) humans→Users (not a k8s object, cert CN) vs pods→ServiceAccounts (real namespaced objects). **Pick up here:** posed but didn't finish the namespaced-vs-cluster probe (get pods in all namespaces = ClusterRole + ClusterRoleBinding; a ClusterRole bound by a namespaced RoleBinding only grants in that one ns). Needs: hands-on Role/RoleBinding + ClusterRole, `can-i --as` syntax refresher (he asked for it), and break/fix. NOT mastered — theory only. |
+| 1.1 RBAC | ✅ | 2026-08-07 | **Mastered.** Finished the namespaced-vs-cluster probe (nailed: cluster-wide pod read = ClusterRole+ClusterRoleBinding; RoleBinding→ClusterRole limits to one ns; two RoleBindings for dev+prod vs ClusterRoleBinding for all). Lab 1.1 A–D all hands-on: User/Role/RoleBinding, ServiceAccount + real in-pod token test (exec'd kubectl in a pod running as the SA — saw the 403 for `default`), ClusterRole-reused-per-ns. Break/fix: wrong-apiGroup (edited role apiGroups→`[""]`, watched deployments read silently break, read the 403 that names `apps`, fixed). Great curiosity: asked why apiGroups exist (taught groups/versioning/extensibility) + verb list. Confidence 4/5. |
 | 1.2 kubeadm install & infra | ⬜ | — | |
 | 1.3 Cluster lifecycle & upgrades | ⬜ | — | |
 | 1.4 HA control plane | ⬜ | — | |
