@@ -1,4 +1,20 @@
 
+# RBAC (1.1)
+
+```bash
+kubectl create role pod-reader --verb=get,list,watch --resource=pods -n web        # namespaced Role (auto-resolves apiGroup!)
+kubectl create rolebinding jane-reader --role=pod-reader --user=jane -n web         # bind Role to a User in one ns
+kubectl create clusterrole cm-reader --verb=get,list --resource=configmaps          # ClusterRole (no -n)
+kubectl create rolebinding cm-web --clusterrole=cm-reader --user=jane -n web        # ClusterRole pinned to ONE ns via RoleBinding
+kubectl create sa reader-sa -n web && kubectl create rolebinding sa-r --role=pod-reader --serviceaccount=web:reader-sa -n web
+kubectl auth can-i list pods -n web --as=jane                                       # impersonate USER (--as, NOT --user)
+kubectl auth can-i list pods -n web --as=system:serviceaccount:web:reader-sa        # impersonate an SA
+kubectl auth can-i --list --as=jane -n web                                          # enumerate everything jane can do
+kubectl get pods -n web --as=jane                                                   # real request => 403 NAMES the group/resource/ns
+# nodes/PVs/namespaces are cluster-scoped => MUST be ClusterRole+ClusterRoleBinding | binding sets scope, role sets powers
+# verbs: get list watch create update patch delete deletecollection (NO "edit") | core group="" , deployments=apps
+```
+
 # Services & Endpoints (2.2)
 
 ```bash
