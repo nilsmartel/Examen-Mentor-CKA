@@ -31,7 +31,7 @@
 
 | Lesson | Status | Last touched | Notes |
 |--------|:------:|:------------:|-------|
-| 1.1 RBAC | ⬜ | — | |
+| 1.1 RBAC | 🟡 | 2026-08-06 | Diagnostic (theory only, no lab yet). Strong prior model: Roles = verbs on resources, bindings attach roles to subjects, SAs = machine identities, `can-i` tests access. Corrected 2 things: (a) RoleBinding subjects = Users/Groups/SAs not just SAs; (b) humans→Users (not a k8s object, cert CN) vs pods→ServiceAccounts (real namespaced objects). **Pick up here:** posed but didn't finish the namespaced-vs-cluster probe (get pods in all namespaces = ClusterRole + ClusterRoleBinding; a ClusterRole bound by a namespaced RoleBinding only grants in that one ns). Needs: hands-on Role/RoleBinding + ClusterRole, `can-i --as` syntax refresher (he asked for it), and break/fix. NOT mastered — theory only. |
 | 1.2 kubeadm install & infra | ⬜ | — | |
 | 1.3 Cluster lifecycle & upgrades | ⬜ | — | |
 | 1.4 HA control plane | ⬜ | — | |
@@ -93,8 +93,12 @@ On success push the interval out (~2d → ~5d → ~10d); on a miss reset to ~1d.
 | env vars from ConfigMap/Secret are captured at pod start; need `kubectl rollout restart` to pick up changes | 3.2 | 2026-08-05 | 2026-08-10 | 5d |
 | Mounted ConfigMap/Secret volumes update in place (no restart), env vars don't | 3.2 | 2026-08-05 | 2026-08-07 | 2d |
 | No CNI → nodes `NotReady`; CNI broken later → pods `ContainerCreating`. Fix = apply/repair CNI manifest, not restart apiserver/kubelet | 2.1 | 2026-08-05 | 2026-08-07 | 2d |
-| Service ClusterIP is virtual (no real interface); kube-proxy translates it to a pod IP. Pod IP is a real endpoint | 2.1 | 2026-08-05 | 2026-08-07 | 2d |
-| Pod IPs are ephemeral (new IP on recreate) → never hardcode; use a Service for a stable VIP/DNS | 2.1 | 2026-08-05 | 2026-08-08 | 3d |
+| Service ClusterIP is virtual (no real interface); kube-proxy translates it to a pod IP. Pod IP is a real endpoint | 2.1 | 2026-08-06 | 2026-08-11 | 5d |
+| Pod IPs are ephemeral (new IP on recreate) → never hardcode; use a Service for a stable VIP/DNS | 2.1 | 2026-08-06 | 2026-08-11 | 5d |
+| Service debug chain: Service(selector)→Ready pods→EndpointSlice→kube-proxy→pod. `kubectl get ep` is first move | 2.2 | 2026-08-06 | 2026-08-08 | 2d |
+| Empty endpoints = selector mismatch OR pods not Ready; populated endpoints but "refused" = wrong targetPort | 2.2 | 2026-08-06 | 2026-08-08 | 2d |
+| 3 ports: port (svc, client-facing) / targetPort (pod's real listen port, must match app) / nodePort (external 3xxxx) | 2.2 | 2026-08-06 | 2026-08-08 | 2d |
+| Headless Service (clusterIP:None) = no VIP; DNS returns pod IPs; +StatefulSet gives stable per-pod names (web-0.web…) | 2.2 | 2026-08-06 | 2026-08-08 | 2d |
 
 ## ⚠️ Weak spots
 
@@ -110,6 +114,9 @@ _(Mentor: log specific misconceptions or repeated errors here, e.g. "confuses No
   `valueFrom` with no name). Both self-corrected with one nudge. Not a conceptual gap — watch for
   more "forgot a required field" slips under exam time pressure; a quick `kubectl explain` habit
   would catch these.
+- **RBAC: SA vs User conflation (2026-08-06):** thought human kubectl users authenticate *as*
+  ServiceAccounts. Corrected — humans are `User` subjects (cert CN, not a k8s object); SAs are for
+  in-cluster workloads. Watch this holds next session; it drives which binding/subject to write.
 
 ---
 
@@ -120,6 +127,7 @@ _(Mentor: log specific misconceptions or repeated errors here, e.g. "confuses No
 | 2026-08-04 | First-session diagnostic (rollouts, ConfigMaps/Secrets, Services, RBAC, Pending-vs-troubleshooting) + 3.1 Deployments/rollouts | lab-3.1-rollouts (full: update, break, undo, strategy knobs, restart) | 3.1 mastered ✅. Strong foundation confirmed across the board; syntax rusty but concepts solid. Confidence 3/5 — queued for 2-day recall. |
 | 2026-08-05 | Recall warm-up (3.1: rollback revision, live-pod edit) + 3.2 ConfigMaps & Secrets | lab-3.2-config-secrets (A-C hands-on; D update-behavior mentor-verified) | 3.2 mastered ✅. Base64≠encryption and env-vs-mount update behavior both predicted correctly pre-lab. Minor manifest-field slips, self-corrected. Confidence 3/5 — queued for 2-day recall. |
 | 2026-08-05 | Ad-hoc recall (3.1 rollout cmds, 3.2 env-var staleness) + 2.1 Pod connectivity & network model (CIDR/NAT/flat-network explained from scratch) | lab-2.1-pod-connectivity (A cross-pod curl by IP, B ephemeral IPs, C shared netns; break-it/fix-it: two-nginx port-80 collision) | 2.1 mastered ✅. Productive struggle — initially doubted pods have IPs, disproved own hypothesis via `get pods -o wide`. Needed CNI taught directly (didn't know the component). Wobbles: "CDI" for CNI; unaware Service IP is virtual. Confidence 3/5. |
+| 2026-08-06 | Recall (3.1 live-pod edit, 2.1 ClusterIP-virtual + ephemeral IPs — all solid) + 2.2 Services & Endpoints. Foundational Q first: how many pods share a node/IPs → network namespaces & per-namespace port space (tied back to 2.1 shared-netns lab). | lab-2.2-services A–D: ClusterIP + wget-by-DNS, break selector→empty ep→fix, NodePort + 3-port trichotomy, targetPort→8080 mismatch→refused→fix | 2.2 mastered ✅. Very curious/self-driving session — asked about api-resources short names, EndpointSlice naming, headless-vs-hardcoded-IP, read/write replica split, and independently derived the label+operator failover pattern (1.8 preview). Brief StatefulSet intro. Confidence 4/5 (highest yet). |
 
 ---
 
