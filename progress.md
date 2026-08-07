@@ -118,9 +118,15 @@ _(Mentor: log specific misconceptions or repeated errors here, e.g. "confuses No
   `valueFrom` with no name). Both self-corrected with one nudge. Not a conceptual gap — watch for
   more "forgot a required field" slips under exam time pressure; a quick `kubectl explain` habit
   would catch these.
-- **RBAC: SA vs User conflation (2026-08-06):** thought human kubectl users authenticate *as*
-  ServiceAccounts. Corrected — humans are `User` subjects (cert CN, not a k8s object); SAs are for
-  in-cluster workloads. Watch this holds next session; it drives which binding/subject to write.
+- **RBAC: SA vs User conflation (2026-08-06→RESOLVED 2026-08-07):** previously thought humans auth *as*
+  SAs. In the 1.1 lab he articulated the split cleanly (Users = trusted strings/no object; SAs = real
+  namespaced objects, `system:serviceaccount:ns:name`) and verified it via a real in-pod token test.
+  Considered resolved — keep the recall item live.
+- **`--as` vs `--user` on `auth can-i` (2026-08-07):** used `--user=jane` → "jane does not exist".
+  `--user` selects a *kubeconfig* entry; impersonation is `--as`. Quick slip, corrected; watch under time
+  pressure. Also flagged: `edit` is not an RBAC verb (→ `update`/`patch`).
+- **CNI naming (recurring):** said "CDI" for CNI again (3rd time, from 2.1). Diagnosis/reasoning is
+  correct every time — purely the acronym. Had him say "CNI" back. Low stakes but worth a nudge if it recurs.
 
 ---
 
