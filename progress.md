@@ -4,18 +4,20 @@
 > Status: `⬜ Not started` · `🟡 In progress` · `✅ Mastered` (only ✅ counts toward completion).
 > Overall % is **weighted by exam domain** — see the formula at the bottom.
 
-## 📊 Overall: ~19% complete  *(weighted by exam domain — see formula at bottom)*
+## 📊 Overall: ~25% complete  *(weighted by exam domain — see formula at bottom)*
 
-`████░░░░░░░░░░░░░░░░` 6 / 27 lessons mastered · the bar tracks **weighted %**, not the raw lesson count
+`█████░░░░░░░░░░░░░░░░` 7 / 27 lessons mastered · the bar tracks **weighted %**, not the raw lesson count
 
-> ▶️ **NEXT SESSION — start here:** 1.5 etcd is **done ✅** (certs primer + full save/restore lab, incl. the
-> "restore rewinds desired state, controllers reconcile" insight). Cert/mTLS foundation now solid. Good
-> next steps in Domain 01: **1.2 kubeadm install & infra** (reuses the cert/PKI mental model — `/etc/kubernetes/pki`,
-> API-server certs) or **1.3 cluster lifecycle & upgrades** (heavy exam earner). Interleave with a
-> Troubleshooting lesson soon (0/5, 30% weight — biggest gap). Warm-up recall: still-due 1.1 RBAC items +
-> new etcd items (save-needs-certs/restore-offline, two moves of a restore).
+> ▶️ **NEXT SESSION — start here:** 5.2 control-plane troubleshooting **done ✅** — first Troubleshooting win
+> (broke+fixed scheduler via image tag, then the classic apiserver-down via bad `--etcd-servers` port, diagnosed
+> ENTIRELY on the node with `crictl logs` since kubectl was dead; distinguished the storage-provisioner CrashLoop
+> as *aftermath* not root cause). Mostly solo — strong. **Best next step: 5.1 cluster & node troubleshooting**
+> — the sibling/prereq we leapfrogged, keeps momentum on the 30%-weight domain (now 1/5). *Interleave alternative:*
+> **1.3 cluster lifecycle & upgrades** (Domain 01 heavy earner, node drain/cordon — complements the node focus).
+> Warm-up recall: new 5.2 items (static-pod fix = edit file/kubelet recreates; crictl needs sudo; symptom→component map)
+> + still-due RBAC/etcd items.
 
-**Strong:** Cluster Architecture building (2/8: RBAC + etcd), Workloads (2/5), Services & Networking (2/6) · **Weak / next up:** Cluster Architecture still 6 to go (kubeadm/upgrades/HA), Troubleshooting (0/5) — the 30%-weight domain, still untouched, biggest points on the table
+**Strong:** Troubleshooting building (1/5: control-plane repair — the classic apiserver/scheduler breaks), Cluster Architecture (2/8: RBAC + etcd), Workloads (2/5), Services & Networking (2/6) · **Weak / next up:** Troubleshooting still 4 to go (30% weight, most points on the table — keep drilling), Cluster Architecture 6 to go (kubeadm/upgrades/HA)
 
 ---
 
@@ -81,7 +83,7 @@
 | Lesson | Status | Last touched | Notes |
 |--------|:------:|:------------:|-------|
 | 5.1 Cluster & node troubleshooting | ⬜ | — | |
-| 5.2 Control-plane components | ⬜ | — | |
+| 5.2 Control-plane components | ✅ | 2026-08-11 | **Mastered** (first Troubleshooting win — the 30% domain opens). Taught the static-pod model Socratically: killed the "scheduler controls the nodes" misconception with the bootstrap chicken-and-egg (kubelet runs `/etc/kubernetes/manifests/` FILES directly, bypassing scheduler+apiserver) → derived exam-trap #1 (can't `kubectl edit` a static pod, edit the file, kubelet recreates). Lab A–C full hands-on: **Part B** mystery scheduler break (bad image tag → ErrImagePull → reproduced "new pods stuck Pending" → fixed by reading the correct tag from another manifest, verified testpod schedules onto minikube). **Part C** the classic apiserver break (I seeded bad `--etcd-servers` port 9999) → kubectl died → diagnosed ENTIRELY on the node: `crictl ps -a` (taught why `-a`: evidence is in the crashed corpse) + `crictl logs` → read the fatal `context deadline exceeded` / etcd `connection refused` → found correct port 2379 by reading etcd.yaml (didn't guess) → fixed manifest → kubelet recreated → cluster back. **Standout:** independently spotted storage-provisioner CrashLoopBackOff and, once he saw it self-heal, correctly classified it as *aftermath* not *root cause* — the exact cause-vs-collateral discrimination the exam rewards. Also learned the post-recovery "wait 30–60s, node briefly NotReady is just heartbeat re-posting" patience lesson. Slip: ran `crictl` without sudo → go-panic logs (resolved: needs sudo). Confidence 3/5 (slightly under — mostly solo). ~19%→~25%. |
 | 5.3 Resource-usage monitoring | ⬜ | — | |
 | 5.4 Container output & logging | ⬜ | — | |
 | 5.5 Services & networking troubleshooting | ⬜ | — | |
@@ -97,8 +99,7 @@ On success push the interval out (~2d → ~5d → ~10d); on a miss reset to ~1d.
 |----------------|:------:|:-------------:|:-----------:|:--------:|
 | `rollout undo --to-revision` is absolute, not relative; undo re-numbers the promoted RS to the new highest revision | 3.1 | 2026-08-10 | 2026-08-20 | 10d |
 | Editing a live pod doesn't self-heal instantly — RS reconciles pod *count* not spec; reverts only on pod *replacement* | 3.1 | 2026-08-08 | 2026-08-13 | 5d |
-| env vars from ConfigMap/Secret are captured at pod start; need `kubectl rollout restart` to pick up changes | 3.2 | 2026-08-05 | 2026-08-10 | 5d |
-| Mounted ConfigMap/Secret volumes update in place (no restart), env vars don't | 3.2 | 2026-08-07 | 2026-08-12 | 5d |
+| _(retired 2026-08-11 — owned)_ env vars captured at pod start (need `rollout restart`) vs mounted volumes update in place. Learner asked to stop quizzing; nailed 4×. | 3.2 | 2026-08-11 | — | retired |
 | No CNI → nodes `NotReady`; CNI broken later → pods `ContainerCreating`. Fix = apply/repair CNI manifest, not restart apiserver/kubelet | 2.1 | 2026-08-07 | 2026-08-12 | 5d |
 | Service ClusterIP is virtual (no real interface); kube-proxy translates it to a pod IP. Pod IP is a real endpoint | 2.1 | 2026-08-06 | 2026-08-11 | 5d |
 | Pod IPs are ephemeral (new IP on recreate) → never hardcode; use a Service for a stable VIP/DNS | 2.1 | 2026-08-06 | 2026-08-11 | 5d |
@@ -106,11 +107,15 @@ On success push the interval out (~2d → ~5d → ~10d); on a miss reset to ~1d.
 | Empty endpoints = selector mismatch OR pods not Ready; populated endpoints but "refused" = wrong targetPort | 2.2 | 2026-08-08 | 2026-08-13 | 5d |
 | 3 ports: port (svc, client-facing) / targetPort (pod's real listen port, must match app) / nodePort (external 3xxxx) | 2.2 | 2026-08-10 | 2026-08-12 | 2d |
 | Headless Service (clusterIP:None) = no VIP; DNS returns pod IPs; +StatefulSet gives stable per-pod names (web-0.web…) | 2.2 | 2026-08-10 | 2026-08-15 | 5d |
-| etcd `snapshot save` needs 3 certs (live mTLS: cacert verifies etcd, cert+key = your client identity); `snapshot restore` needs ZERO certs (offline file op, no endpoint) | 1.5 | 2026-08-10 | 2026-08-12 | 2d |
+| etcd `snapshot save` needs 3 certs (live mTLS: cacert verifies etcd, cert+key = your client identity); `snapshot restore` needs ZERO certs (offline file op, no endpoint). Restore uses `etcdutl`, save uses `etcdctl` | 1.5 | 2026-08-11 | 2026-08-16 | 5d |
 | etcd restore = 2 moves: (1) `etcdutl snapshot restore snap.db --data-dir=NEW` (offline), (2) repoint the etcd static-pod manifest's **etcd-data hostPath** to NEW (leave `--data-dir` flag + mountPath). kubelet restarts etcd | 1.5 | 2026-08-10 | 2026-08-12 | 2d |
 | AFTER an etcd restore, restart kube-controller-manager + kube-scheduler — their watch caches hold future resourceVersions the rewound etcd no longer has → stalls (e.g. namespace stuck Terminating). apiserver self-restarts. Restart a static pod by moving its manifest out of /etc/kubernetes/manifests and back | 1.5 | 2026-08-10 | 2026-08-12 | 2d |
 | Locate static-pod manifests: standard = `/etc/kubernetes/manifests/`; if unsure derive it via `grep staticPodPath /var/lib/kubelet/config.yaml`. Cert paths + endpoint are read straight from `etcd.yaml` | 1.5 | 2026-08-10 | 2026-08-12 | 2d |
-| Role/RoleBinding are namespaced; cluster-scoped resources (nodes, PVs, namespaces) REQUIRE ClusterRole+ClusterRoleBinding — a Role can't grant them. The binding sets the scope, the role sets the powers | 1.1 | 2026-08-07 | 2026-08-09 | 2d |
+| Role/RoleBinding are namespaced; cluster-scoped resources (nodes, PVs, namespaces) REQUIRE ClusterRole+ClusterRoleBinding — a Role can't grant them. The binding sets the scope, the role sets the powers | 1.1 | 2026-08-11 | 2026-08-16 | 5d |
+| Static pods = kubelet runs manifests in `/etc/kubernetes/manifests/` FILES directly (bypasses scheduler+apiserver, so control plane can bootstrap). FIX = edit the file on the node → kubelet auto-recreates; `kubectl edit`/`apply` won't stick | 5.2 | 2026-08-11 | 2026-08-13 | 2d |
+| API server DOWN → `kubectl` = connection refused → ssh to node. `sudo crictl ps -a` (`-a` shows the CRASHED container — evidence is in the corpse; needs sudo) + `sudo crictl logs <id>` for the fatal error | 5.2 | 2026-08-11 | 2026-08-13 | 2d |
+| Symptom→component map: apiserver down = kubectl refused; scheduler down = new pods stuck **Pending** (nodes healthy, existing pods fine); controller-manager down = no self-heal/endpoints; etcd down = apiserver won't start | 5.2 | 2026-08-11 | 2026-08-13 | 2d |
+| After recovering the control plane, wait 30–60s: a brief node `NotReady` + downstream CrashLoops (e.g. storage-provisioner) are **aftermath** (lost apiserver connection), not root cause. Fix the ONE real thing; collateral self-heals | 5.2 | 2026-08-11 | 2026-08-13 | 2d |
 | `auth can-i` uses `--as` (impersonate); `--user` picks a kubeconfig entry (→ "does not exist"). can-i never errors (default-deny); the real request gives a 403 naming group/resource/ns/verb | 1.1 | 2026-08-07 | 2026-08-09 | 2d |
 | Wrong apiGroup silently grants nothing: deployments=`apps`, pods/configmaps/nodes=core `""`. Imperative `create role --resource=` auto-resolves the group; hand-written YAML is where the trap bites | 1.1 | 2026-08-07 | 2026-08-09 | 2d |
 | SA identity in bindings/impersonation = `system:serviceaccount:<ns>:<name>`; SAs are real namespaced objects (fully-qualified), Users/Groups are just trusted strings (no object). `edit` is NOT a verb → use `update`/`patch` | 1.1 | 2026-08-07 | 2026-08-09 | 2d |
@@ -159,6 +164,7 @@ _(Mentor: log specific misconceptions or repeated errors here, e.g. "confuses No
 | 2026-08-07 | Recall (3.2 mounted-vs-env update, 2.1 CNI-broken→NotReady — both correct) + finished 1.1 RBAC (namespaced-vs-cluster probe, then full lab). | lab-1.1-rbac A–D: User/Role/RoleBinding + `can-i --as`, wrong-apiGroup break/fix (read the 403 naming `apps`), SA + real in-pod token test, ClusterRole-reused-per-ns via RoleBinding | 1.1 mastered ✅ (first Domain 01 win). Curiosity tangents: *why* apiGroups exist (groups/versioning/extensibility), full verb list. Slips: `--user` vs `--as` on can-i; "edit" not a verb; "CDI"→CNI again. SA-vs-User confusion now resolved. Confidence 4/5. ~13%→~16%. |
 | 2026-08-08 | Recall (3× all correct: Service debug chain / empty-vs-refused endpoints / live-pod edit reverts) + **1.5 etcd concepts** (etcd=cluster DB, snapshot save/restore, mTLS+3 cert flags, restore-to-new-dir→repoint manifest, `minikube ssh` rationale). Short session — learner had to leave right before the lab. | none (stopped before lab Part A) | 1.5 **in progress 🟡**, not mastered (no lab, no self-test → no % change, stays ~16%). Great boundary insight: etcd snapshot ≠ volume data. mTLS was new → **requested a certificates/identity primer to open next session**. Confidence n/a. |
 | 2026-08-10 | Recall (3 warm-ups: 3-port trichotomy [soft miss — swapped port↔targetPort, corrected], headless Service [ok], rollout undo --to-revision [ok]) → **Certificates/mTLS primer** (built Socratically) → **1.5 etcd lab A–D**. | lab-1.5-etcd-backup-restore FULL: snapshot save (3 certs) + etcdutl status verify, created after-backup post-snapshot, etcdutl restore→new data dir, repointed manifest hostPath, confirmed after-backup vanished. **Bonus real troubleshooting:** stale mirror-pod status (Pending vs crictl-Running) + **namespace stuck Terminating** → diagnosed via cm logs (watch at rV 118936 > restored rev 117930) → fixed by restarting controller-manager + scheduler static pods (manifest-move technique). | **1.5 mastered ✅** (2nd Domain 01 win). Deep, curiosity-driven session: derived the mTLS model himself, asked snap.db(archive) vs restored/(bootable data-dir), and the orphaned-container Q → reconcile-loop teaching. Learned the restore-aftermath control-plane restart (guaranteed exam earner). Cert/PKI gap resolved. ~16%→~19%. |
+| 2026-08-11 | Recall (3× all correct: RBAC cluster-scoped-needs-ClusterRole, ConfigMap env-vs-mount [retired — owns it], etcd save-3-certs/restore-zero + etcdctl-vs-etcdutl bonus) → **5.2 Control-plane / static-pod troubleshooting** (taught Socratically, killed the "scheduler controls nodes" idea via the bootstrap chicken-and-egg). | lab-5.2-control-plane A–C FULL: **B** mystery scheduler break (bad image tag→ErrImagePull→reproduced pods-stuck-Pending→fixed by reading correct tag from another manifest→verified testpod schedules). **C** classic apiserver break (mentor-seeded bad `--etcd-servers` port 9999)→kubectl dead→diagnosed ON NODE with `crictl ps -a`+`crictl logs` (read fatal `context deadline exceeded`/etcd refused)→found port 2379 from etcd.yaml→fixed→recovered. Unscripted: spotted storage-provisioner CrashLoop, classified it as aftermath not root cause when it self-healed. | **5.2 mastered ✅** — **first Troubleshooting win (30% domain opens)**. Mostly solo, strong. Learned: static-pod fix = edit file/kubelet recreates (no apply); `crictl -a` + why; symptom→component map; post-recovery patience (brief NotReady = heartbeat). Slip: `crictl` without sudo → go-panic (needs sudo). Confidence 3/5. ~19%→~25%. |
 
 ---
 

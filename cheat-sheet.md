@@ -1,4 +1,15 @@
 
+# Control-Plane / Static-Pod Troubleshooting (5.2)
+
+```bash
+ls /etc/kubernetes/manifests/                       # the 4 control-plane static pods (apiserver/etcd/scheduler/controller-manager); kubelet runs these from FILE
+minikube ssh; sudo vi /etc/kubernetes/manifests/kube-apiserver.yaml   # FIX a static pod = edit the file on the node; kubelet auto-recreates (NO kubectl apply; kubectl edit won't stick)
+sudo crictl ps -a --name kube-apiserver             # API server DOWN => kubectl dead => go to node; -a shows the CRASHED container (evidence is in the corpse); needs sudo
+sudo crictl logs <container-id> 2>&1 | tail -30     # the real fatal error (e.g. can't reach etcd -> "F ... context deadline exceeded")
+kubectl get pods -A | grep -v Running               # symptom map: apiserver=kubectl refused / scheduler down=new pods stuck Pending / controller-mgr=no self-heal / etcd=apiserver won't start
+# after recovering apiserver, wait 30-60s: downstream CrashLoops (storage-provisioner) are AFTERMATH, not root cause — fix the one real thing
+```
+
 # etcd Backup & Restore (1.5)
 
 ```bash
