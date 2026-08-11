@@ -148,6 +148,7 @@ _(Mentor: log specific misconceptions or repeated errors here, e.g. "confuses No
   One residual slip to watch: under quiz he mislabeled the 3 etcdctl flags as "etcd's key + apiserver's
   pubkey" instead of CA cert + *client's own* cert + *client's own* key (the lab's server-cert-reused-as-
   client-cert shortcut probably confused him). Recall item covers it. Foundation now solid for 1.2/5.2.
+- **`crictl` needs `sudo` (2026-08-11):** ran `crictl` un-privileged during 5.2 → got a Go panic/connection stack trace, briefly thought crictl was broken. It's just root-only (runtime socket). On the node, always `sudo crictl …`. Low stakes, one-time nudge — flag if it recurs when the API server is down and crictl is the *only* tool.
 - **CNI naming (recurring):** said "CDI" for CNI again (3rd time, from 2.1). Diagnosis/reasoning is
   correct every time — purely the acronym. Had him say "CNI" back. Low stakes but worth a nudge if it recurs.
 
