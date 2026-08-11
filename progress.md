@@ -4,11 +4,18 @@
 > Status: `⬜ Not started` · `🟡 In progress` · `✅ Mastered` (only ✅ counts toward completion).
 > Overall % is **weighted by exam domain** — see the formula at the bottom.
 
-## 📊 Overall: ~16% complete  *(weighted by exam domain — see formula at bottom)*
+## 📊 Overall: ~19% complete  *(weighted by exam domain — see formula at bottom)*
 
-`███░░░░░░░░░░░░░░░░░` 5 / 27 lessons mastered · the bar tracks **weighted %**, not the raw lesson count
+`████░░░░░░░░░░░░░░░░` 6 / 27 lessons mastered · the bar tracks **weighted %**, not the raw lesson count
 
-**Strong:** Workloads & Scheduling (2/5), Services & Networking building (2/6: pod model + Services), RBAC now solid (1/8) · **Weak / next up:** Cluster Architecture (1/8 — 7 to go, incl. etcd/upgrades/HA), Troubleshooting (0/5) — biggest domains, most points on the table
+> ▶️ **NEXT SESSION — start here:** 1.5 etcd is **done ✅** (certs primer + full save/restore lab, incl. the
+> "restore rewinds desired state, controllers reconcile" insight). Cert/mTLS foundation now solid. Good
+> next steps in Domain 01: **1.2 kubeadm install & infra** (reuses the cert/PKI mental model — `/etc/kubernetes/pki`,
+> API-server certs) or **1.3 cluster lifecycle & upgrades** (heavy exam earner). Interleave with a
+> Troubleshooting lesson soon (0/5, 30% weight — biggest gap). Warm-up recall: still-due 1.1 RBAC items +
+> new etcd items (save-needs-certs/restore-offline, two moves of a restore).
+
+**Strong:** Cluster Architecture building (2/8: RBAC + etcd), Workloads (2/5), Services & Networking (2/6) · **Weak / next up:** Cluster Architecture still 6 to go (kubeadm/upgrades/HA), Troubleshooting (0/5) — the 30%-weight domain, still untouched, biggest points on the table
 
 ---
 
@@ -35,7 +42,7 @@
 | 1.2 kubeadm install & infra | ⬜ | — | |
 | 1.3 Cluster lifecycle & upgrades | ⬜ | — | |
 | 1.4 HA control plane | ⬜ | — | |
-| 1.5 etcd backup & restore | ⬜ | — | |
+| 1.5 etcd backup & restore | ✅ | 2026-08-10 | **Mastered.** Opened with a full certs/mTLS primer (built it Socratically: key pair → sign-with-private/verify-with-public → the trust gap → CA-signed cert binds pubkey↔identity → mTLS two-way → 3 etcdctl flags map onto the handshake). Learner derived the sign/verify trick, the "stolen photocopy needs the private key" impersonation point, and the ca.crt/crt-public vs key-secret split himself. Lab full A–D hands-on: snapshot save (verified w/ etcdutl status), created after-backup post-snapshot, restore into new dir, repointed manifest hostPath (nailed the "change ONLY the etcd-data hostPath, not --data-dir/mountPath" trap), watched after-backup vanish. **Standout insights:** asked what restore *does* (snap.db=archive vs restored/=bootable data-dir); asked about orphaned containers → led to the reconcile-loop explanation (kubelet GCs orphaned pods; restore rewinds desired state, controllers drag actual→desired). Grasped save-needs-3-certs (live mTLS) vs restore-needs-none (offline file op). **Minikube wrinkle handled:** host has no etcdctl + distroless image → drove via `kubectl exec etcd-minikube`, writing only to mounted paths. Confidence high. ~16%→~19%. |
 | 1.6 Helm & Kustomize | ⬜ | — | |
 | 1.7 Extension interfaces (CNI/CSI/CRI) | ⬜ | — | |
 | 1.8 CRDs & operators | ⬜ | — | |
@@ -88,17 +95,21 @@ On success push the interval out (~2d → ~5d → ~10d); on a miss reset to ~1d.
 
 | Item / concept | Lesson | Last reviewed | Next review | Interval |
 |----------------|:------:|:-------------:|:-----------:|:--------:|
-| `rollout undo --to-revision` is absolute, not relative; undo re-numbers the promoted RS to the new highest revision | 3.1 | 2026-08-05 | 2026-08-10 | 5d |
-| Editing a live pod doesn't self-heal instantly — RS reconciles pod *count* not spec; reverts only on pod *replacement* | 3.1 | 2026-08-06 | 2026-08-08 | 2d |
+| `rollout undo --to-revision` is absolute, not relative; undo re-numbers the promoted RS to the new highest revision | 3.1 | 2026-08-10 | 2026-08-20 | 10d |
+| Editing a live pod doesn't self-heal instantly — RS reconciles pod *count* not spec; reverts only on pod *replacement* | 3.1 | 2026-08-08 | 2026-08-13 | 5d |
 | env vars from ConfigMap/Secret are captured at pod start; need `kubectl rollout restart` to pick up changes | 3.2 | 2026-08-05 | 2026-08-10 | 5d |
 | Mounted ConfigMap/Secret volumes update in place (no restart), env vars don't | 3.2 | 2026-08-07 | 2026-08-12 | 5d |
 | No CNI → nodes `NotReady`; CNI broken later → pods `ContainerCreating`. Fix = apply/repair CNI manifest, not restart apiserver/kubelet | 2.1 | 2026-08-07 | 2026-08-12 | 5d |
 | Service ClusterIP is virtual (no real interface); kube-proxy translates it to a pod IP. Pod IP is a real endpoint | 2.1 | 2026-08-06 | 2026-08-11 | 5d |
 | Pod IPs are ephemeral (new IP on recreate) → never hardcode; use a Service for a stable VIP/DNS | 2.1 | 2026-08-06 | 2026-08-11 | 5d |
-| Service debug chain: Service(selector)→Ready pods→EndpointSlice→kube-proxy→pod. `kubectl get ep` is first move | 2.2 | 2026-08-06 | 2026-08-08 | 2d |
-| Empty endpoints = selector mismatch OR pods not Ready; populated endpoints but "refused" = wrong targetPort | 2.2 | 2026-08-06 | 2026-08-08 | 2d |
-| 3 ports: port (svc, client-facing) / targetPort (pod's real listen port, must match app) / nodePort (external 3xxxx) | 2.2 | 2026-08-06 | 2026-08-08 | 2d |
-| Headless Service (clusterIP:None) = no VIP; DNS returns pod IPs; +StatefulSet gives stable per-pod names (web-0.web…) | 2.2 | 2026-08-06 | 2026-08-08 | 2d |
+| Service debug chain: Service(selector)→Ready pods→EndpointSlice→kube-proxy→pod. `kubectl get ep` is first move | 2.2 | 2026-08-08 | 2026-08-13 | 5d |
+| Empty endpoints = selector mismatch OR pods not Ready; populated endpoints but "refused" = wrong targetPort | 2.2 | 2026-08-08 | 2026-08-13 | 5d |
+| 3 ports: port (svc, client-facing) / targetPort (pod's real listen port, must match app) / nodePort (external 3xxxx) | 2.2 | 2026-08-10 | 2026-08-12 | 2d |
+| Headless Service (clusterIP:None) = no VIP; DNS returns pod IPs; +StatefulSet gives stable per-pod names (web-0.web…) | 2.2 | 2026-08-10 | 2026-08-15 | 5d |
+| etcd `snapshot save` needs 3 certs (live mTLS: cacert verifies etcd, cert+key = your client identity); `snapshot restore` needs ZERO certs (offline file op, no endpoint) | 1.5 | 2026-08-10 | 2026-08-12 | 2d |
+| etcd restore = 2 moves: (1) `etcdutl snapshot restore snap.db --data-dir=NEW` (offline), (2) repoint the etcd static-pod manifest's **etcd-data hostPath** to NEW (leave `--data-dir` flag + mountPath). kubelet restarts etcd | 1.5 | 2026-08-10 | 2026-08-12 | 2d |
+| AFTER an etcd restore, restart kube-controller-manager + kube-scheduler — their watch caches hold future resourceVersions the rewound etcd no longer has → stalls (e.g. namespace stuck Terminating). apiserver self-restarts. Restart a static pod by moving its manifest out of /etc/kubernetes/manifests and back | 1.5 | 2026-08-10 | 2026-08-12 | 2d |
+| Locate static-pod manifests: standard = `/etc/kubernetes/manifests/`; if unsure derive it via `grep staticPodPath /var/lib/kubelet/config.yaml`. Cert paths + endpoint are read straight from `etcd.yaml` | 1.5 | 2026-08-10 | 2026-08-12 | 2d |
 | Role/RoleBinding are namespaced; cluster-scoped resources (nodes, PVs, namespaces) REQUIRE ClusterRole+ClusterRoleBinding — a Role can't grant them. The binding sets the scope, the role sets the powers | 1.1 | 2026-08-07 | 2026-08-09 | 2d |
 | `auth can-i` uses `--as` (impersonate); `--user` picks a kubeconfig entry (→ "does not exist"). can-i never errors (default-deny); the real request gives a 403 naming group/resource/ns/verb | 1.1 | 2026-08-07 | 2026-08-09 | 2d |
 | Wrong apiGroup silently grants nothing: deployments=`apps`, pods/configmaps/nodes=core `""`. Imperative `create role --resource=` auto-resolves the group; hand-written YAML is where the trap bites | 1.1 | 2026-08-07 | 2026-08-09 | 2d |
@@ -125,6 +136,13 @@ _(Mentor: log specific misconceptions or repeated errors here, e.g. "confuses No
 - **`--as` vs `--user` on `auth can-i` (2026-08-07):** used `--user=jane` → "jane does not exist".
   `--user` selects a *kubeconfig* entry; impersonation is `--as`. Quick slip, corrected; watch under time
   pressure. Also flagged: `edit` is not an RBAC verb (→ `update`/`patch`).
+- **Certificates / PKI gap (2026-08-08 → RESOLVED 2026-08-10):** did the full primer to open the session.
+  Learner built the model himself Socratically — sign-with-private/verify-with-public, the trust gap,
+  CA-signed cert binds pubkey↔identity, mTLS two-way, and the "stolen photocopy can't sign without the
+  private key" impersonation point. Cleanly stated ca.crt/crt = public-shareable vs key = secret-revoke.
+  One residual slip to watch: under quiz he mislabeled the 3 etcdctl flags as "etcd's key + apiserver's
+  pubkey" instead of CA cert + *client's own* cert + *client's own* key (the lab's server-cert-reused-as-
+  client-cert shortcut probably confused him). Recall item covers it. Foundation now solid for 1.2/5.2.
 - **CNI naming (recurring):** said "CDI" for CNI again (3rd time, from 2.1). Diagnosis/reasoning is
   correct every time — purely the acronym. Had him say "CNI" back. Low stakes but worth a nudge if it recurs.
 
@@ -139,6 +157,8 @@ _(Mentor: log specific misconceptions or repeated errors here, e.g. "confuses No
 | 2026-08-05 | Ad-hoc recall (3.1 rollout cmds, 3.2 env-var staleness) + 2.1 Pod connectivity & network model (CIDR/NAT/flat-network explained from scratch) | lab-2.1-pod-connectivity (A cross-pod curl by IP, B ephemeral IPs, C shared netns; break-it/fix-it: two-nginx port-80 collision) | 2.1 mastered ✅. Productive struggle — initially doubted pods have IPs, disproved own hypothesis via `get pods -o wide`. Needed CNI taught directly (didn't know the component). Wobbles: "CDI" for CNI; unaware Service IP is virtual. Confidence 3/5. |
 | 2026-08-06 | Recall (3.1 live-pod edit, 2.1 ClusterIP-virtual + ephemeral IPs — all solid) + 2.2 Services & Endpoints. Foundational Q first: how many pods share a node/IPs → network namespaces & per-namespace port space (tied back to 2.1 shared-netns lab). | lab-2.2-services A–D: ClusterIP + wget-by-DNS, break selector→empty ep→fix, NodePort + 3-port trichotomy, targetPort→8080 mismatch→refused→fix | 2.2 mastered ✅. Very curious/self-driving session — asked about api-resources short names, EndpointSlice naming, headless-vs-hardcoded-IP, read/write replica split, and independently derived the label+operator failover pattern (1.8 preview). Brief StatefulSet intro. Confidence 4/5 (highest yet). |
 | 2026-08-07 | Recall (3.2 mounted-vs-env update, 2.1 CNI-broken→NotReady — both correct) + finished 1.1 RBAC (namespaced-vs-cluster probe, then full lab). | lab-1.1-rbac A–D: User/Role/RoleBinding + `can-i --as`, wrong-apiGroup break/fix (read the 403 naming `apps`), SA + real in-pod token test, ClusterRole-reused-per-ns via RoleBinding | 1.1 mastered ✅ (first Domain 01 win). Curiosity tangents: *why* apiGroups exist (groups/versioning/extensibility), full verb list. Slips: `--user` vs `--as` on can-i; "edit" not a verb; "CDI"→CNI again. SA-vs-User confusion now resolved. Confidence 4/5. ~13%→~16%. |
+| 2026-08-08 | Recall (3× all correct: Service debug chain / empty-vs-refused endpoints / live-pod edit reverts) + **1.5 etcd concepts** (etcd=cluster DB, snapshot save/restore, mTLS+3 cert flags, restore-to-new-dir→repoint manifest, `minikube ssh` rationale). Short session — learner had to leave right before the lab. | none (stopped before lab Part A) | 1.5 **in progress 🟡**, not mastered (no lab, no self-test → no % change, stays ~16%). Great boundary insight: etcd snapshot ≠ volume data. mTLS was new → **requested a certificates/identity primer to open next session**. Confidence n/a. |
+| 2026-08-10 | Recall (3 warm-ups: 3-port trichotomy [soft miss — swapped port↔targetPort, corrected], headless Service [ok], rollout undo --to-revision [ok]) → **Certificates/mTLS primer** (built Socratically) → **1.5 etcd lab A–D**. | lab-1.5-etcd-backup-restore FULL: snapshot save (3 certs) + etcdutl status verify, created after-backup post-snapshot, etcdutl restore→new data dir, repointed manifest hostPath, confirmed after-backup vanished. **Bonus real troubleshooting:** stale mirror-pod status (Pending vs crictl-Running) + **namespace stuck Terminating** → diagnosed via cm logs (watch at rV 118936 > restored rev 117930) → fixed by restarting controller-manager + scheduler static pods (manifest-move technique). | **1.5 mastered ✅** (2nd Domain 01 win). Deep, curiosity-driven session: derived the mTLS model himself, asked snap.db(archive) vs restored/(bootable data-dir), and the orphaned-container Q → reconcile-loop teaching. Learned the restore-aftermath control-plane restart (guaranteed exam earner). Cert/PKI gap resolved. ~16%→~19%. |
 
 ---
 

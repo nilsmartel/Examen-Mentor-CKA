@@ -1,4 +1,16 @@
 
+# etcd Backup & Restore (1.5)
+
+```bash
+grep -E "cert|key|listen-client|data-dir" /etc/kubernetes/manifests/etcd.yaml   # READ cert paths + endpoint from the manifest (never guess)
+ETCDCTL_API=3 etcdctl snapshot save /var/lib/etcd-backup/snap.db --endpoints=https://127.0.0.1:2379 --cacert=<ca.crt> --cert=<server.crt> --key=<server.key>   # SAVE needs 3 certs (live mTLS)
+etcdutl snapshot status /path/snap.db --write-out=table       # verify a backup (hash/revision/keys) — 3.6: on etcdutl
+etcdutl snapshot restore /path/snap.db --data-dir=/var/lib/etcd-restored   # RESTORE is OFFLINE => NO cert flags; builds a NEW data dir
+# then edit /etc/kubernetes/manifests/etcd.yaml -> change ONLY the etcd-data volume hostPath.path to the restored dir (leave --data-dir flag + mountPath); kubelet restarts etcd
+grep staticPodPath /var/lib/kubelet/config.yaml              # how to LOCATE the manifest dir if you blank (kubelet config -> staticPodPath)
+# minikube-only: host lacks etcdctl + distroless image => wrap: kubectl -n kube-system exec etcd-minikube -- etcdctl/etcdutl ... (write only to mounted paths /var/lib/minikube/etcd|certs)
+```
+
 # RBAC (1.1)
 
 ```bash
