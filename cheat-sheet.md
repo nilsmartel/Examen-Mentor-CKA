@@ -1,4 +1,14 @@
 
+# Node Troubleshooting — kubelet break/fix (5.1 lab)
+
+```bash
+kubectl get nodes; kubectl describe node minikube     # NotReady? Conditions all Unknown = frozen heartbeat (not False!)
+minikube ssh -- 'sudo systemctl status kubelet'       # dead=inactive(dead) → just stopped;  activating/failed → crash-looping on bad config
+minikube ssh -- 'sudo journalctl -u kubelet | tail -20' # READ the error: "yaml: line N" = parse error in /var/lib/kubelet/config.yaml (file present, contents bad — NOT missing)
+sudo vi /var/lib/kubelet/config.yaml; sudo systemctl restart kubelet  # fix the file, then explicit restart (Restart=always self-heals but don't wait); daemon-reload only if you edit a unit FILE
+kubectl drain minikube --ignore-daemonsets --delete-emptydir-data     # cordon(=SchedulingDisabled, no NEW pods) + EVICT existing; uncordon to restore
+```
+
 # Node Health / NotReady (5.1 primer)
 
 ```bash
