@@ -1,4 +1,26 @@
 
+# Node Health / NotReady (5.1 primer)
+
+```bash
+kubectl describe node <node>                          # read Conditions + Events: WHY NotReady (Ready condition = driven by kubelet heartbeat/Lease)
+kubectl get leases -n kube-node-lease                 # the heartbeat objects the node-controller (in kcm) watches; silence => NotReady after ~40s, evict after ~5m
+minikube ssh; systemctl status kubelet                # kubelet is a SYSTEMD SERVICE (not a static pod) — first stop when a node goes NotReady
+journalctl -u kubelet -f                              # the real reason kubelet is unhealthy/can't reach apiserver
+sudo systemctl restart kubelet                        # after fixing config/certs; node re-posts heartbeat => Ready again
+```
+
+# systemd: systemctl & journalctl (5.1 toolkit)
+
+```bash
+systemctl status kubelet        # the VERDICT: Active: active(running)/inactive(dead)/failed/activating(auto-restart) + Loaded: enabled?/unit path + last ~10 log lines
+systemctl start|stop kubelet    # affects it RIGHT NOW, this boot only
+systemctl enable|disable kubelet# affects NEXT-BOOT autostart (orthogonal axis!); `enable --now` = both at once
+systemctl restart kubelet       # stop+start (kubelet needs full restart to re-read config)
+journalctl -u kubelet           # the EVIDENCE: full log stream for ONE unit. flags: -f follow, -e end, -p err errors-only, --since "5 min ago", -b this-boot
+sudo systemctl daemon-reload    # MUST run after editing any unit/drop-in file, else restart uses STALE config (the systemd cousin of the static-pod trap)
+# kubelet startup flags come from the kubeadm drop-in: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf (--config=/var/lib/kubelet/config.yaml). break = file missing OR wrong path in drop-in
+```
+
 # Control-Plane / Static-Pod Troubleshooting (5.2)
 
 ```bash
