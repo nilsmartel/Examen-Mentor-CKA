@@ -1,3 +1,133 @@
+# Container Output & Logging (5.4)
+
+```bash
+kubectl logs <pod> --previous              # ★ CRASHLOOP GOLD — the corpse's output. Run it FIRST, logs get GC'd
+kubectl logs <pod> -c <container>          # multi-container / init containers (else "choose a container" error)
+kubectl logs <pod> -f --tail=50            # follow; kubectl logs -l app=web --all-containers  (by label)
+kubectl describe pod <pod>                 # Events at the bottom + Last State (Reason / Exit Code)
+kubectl get events -n <ns> --sort-by=.lastTimestamp   # get events is UNSORTED by default — always pass --sort-by
+kubectl exec -it <pod> -- sh               # when the app logs to a FILE inside the container, logs is empty by design
+# TWO SEPARATE STREAMS — never conflate:
+#   journalctl -u kubelet  = the NODE AGENT's own output (mount failures, sandbox errors)  [ssh + sudo]
+#   kubectl logs           = YOUR APP's stdout/stderr of PID 1 only
+# WHY --previous EXISTS: runtime writes /var/log/pods/<ns>_<pod>_<uid>/<ctr>/0.log, 1.log, 2.log — ONE FILE PER RESTART.
+#   plain `logs` reads the NEWEST (a 4-second-old container that hasn't errored yet). --previous reads N-1.log.
+#   The kubelet GCs dead containers → you get ONE step back, and it has a shelf life. Act fast.
+#   "previous terminated container not found" = an ERROR, not empty = this pod has NEVER restarted (diagnostic!)
+# EVIDENCE-LOCATION MAP (which tool, per symptom):
+#   Pending            -> EVENTS  (Node: empty = scheduler's problem; no container ever existed, logs IMPOSSIBLE)
+#   ImagePullBackOff   -> EVENTS  (never executed a line of your code — registry/tag/secret, NOT an app bug)
+#   CrashLoopBackOff   -> logs --previous   (app ran, then failed — the only one that IS an app bug)
+#   OOMKilled          -> describe → Last State
+#   Running but broken -> logs + exec + probe config
+# "-BackOff" SUFFIX = the kubelet's retry RATE-LIMITER, never a root cause. Strip it, ask what actually failed.
+#   ErrImagePull -> ImagePullBackOff is the same disease at a later stage.
+# EXIT CODES are UNIX: killed by signal N => 128+N.  137=128+9 SIGKILL   143=128+15 SIGTERM   139=segfault
+#   ★ Reason and Exit Code are INDEPENDENT. Trust `Reason: OOMKilled` (authoritative, read from the memory cgroup).
+#     137 is a hint, not a requirement — an OOM-killed CHILD process can leave PID 1 exiting with plain 1.
+#   137 + Reason:OOMKilled = raise resources.limits.memory.  137 during a delete = grace period (30s) expired, normal.
+#   Bare pod resources aren't editable in place -> delete & recreate. Deployment -> edit the pod TEMPLATE.
+```
+
+# kubeconfig — what kubectl actually reads (1.2)
+
+```bash
+mkdir -p $HOME/.kube && sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config   # kubeadm leaves it root-owned 600
+sudo chown $(id -u):$(id -g) $HOME/.kube/config                 # WITHOUT this it stays unreadable to your user
+sudo kubectl --kubeconfig=/etc/kubernetes/admin.conf get nodes  # ★ on an ssh'd node you have NO kubeconfig — this is the fix
+kubectl config view --minify                                    # what am I actually pointed at right now?
+kubectl config get-contexts && kubectl config use-context <ctx>  # ALWAYS switch context first (exam point-loser #1)
+# "connection refused to localhost:8080" = kubectl found NO config and fell back to a guess (not a dead apiserver)
+# A kubeconfig is mTLS serialized to YAML — same shape as the etcdctl flags and as kubelet.conf:
+#   clusters: server URL + certificate-authority-data   -> how I VERIFY the apiserver   (one to check them)
+#   users:    client-certificate-data + client-key-data -> who I am + proof             (two to prove yourself)
+#   contexts: cluster + user + namespace
+# admin.conf gets its power via an RBAC binding → mangled RBAC can lock admin.conf out too.
+# super-admin.conf (1.29+) is the break-glass credential that still works. Both in /etc/kubernetes/.
+```
+
+# kubeadm Bootstrap & TLS Node Join (1.2)
+
+```bash
+sudo kubeadm init --pod-network-cidr=10.244.0.0/16    # writes CP static-pod manifests + certs + bootstrap token
+kubectl apply -f <cni-manifest>                        # kubeadm does NOT install a CNI → nodes stay NotReady until you do
+sudo kubeadm token create --print-join-command          # regenerate a lost/expired join cmd (default token TTL = 24h)
+sudo kubeadm token list                                 # TTL / EXPIRES / EXTRA GROUPS columns
+kubectl get csr && kubectl certificate approve <csr>    # a stuck join surfaces as a PENDING CSR
+kubectl get secrets -n kube-system --field-selector type=bootstrap.kubernetes.io/token  # tokens ARE Secrets: bootstrap-token-<id>
+# TWO OPPOSITE TRUST DIRECTIONS in the join command:
+#   --token                          cluster trusts NODE: 24h Secret, group system:bootstrappers:kubeadm:default-node-token,
+#                                    whose ENTIRE RBAC power is "may create a CSR". Delete the Secret = instant revoke.
+#   --discovery-token-ca-cert-hash   node trusts CLUSTER: the CA cert is PUBLIC but BULKY — the hash solves TRANSPORT,
+#                                    not secrecy. Node pulls the CA anonymously from the cluster-info ConfigMap in
+#                                    kube-public, hashes it, compares. Same pattern as an SSH host-key fingerprint.
+# FLOW: bootstrap-kubelet.conf (token) → CSR → auto-approve → /var/lib/kubelet/pki/ → kubelet.conf
+#       → identity becomes system:node:<name> in group system:nodes (Node authorizer scopes it to that node only)
+# INIT ORDER: prep every box (containerd + cgroupDriver=systemd, kubeadm/kubelet/kubectl, swapoff -a,
+#             br_netfilter + bridge-nf-call-iptables=1) → init → cp admin.conf ~/.kube/config → CNI → join
+# TWO FILES, don't confuse: /etc/kubernetes/kubelet.conf = IDENTITY (kubeconfig)
+#                           /var/lib/kubelet/config.yaml = BEHAVIOR (staticPodPath, cgroupDriver, clusterDNS)
+# CERTS: /etc/kubernetes/pki/ on real kubeadm (minikube deviates: /var/lib/minikube/certs).
+#        Don't guess — grep the static-pod manifest: grep ca-file /etc/kubernetes/manifests/kube-apiserver.yaml
+# kubeadm upgrade apply = CLUSTER-scoped, run ONCE. drain→pkg→restart→uncordon = PER-MACHINE, on EVERY node incl. CP.
+```
+
+
+# Kubelet Package Upgrade — step 5 deep-dive (1.3)
+
+```bash
+# 0. FIRST edit the repo — pkgs.k8s.io is PER-MINOR, v1.34 repo will never offer 1.35
+sudo vi /etc/apt/sources.list.d/kubernetes.list   # .../core:/stable:/v1.35/deb/  <- bump the minor
+sudo apt-mark unhold kubelet kubectl              # release the pin (hold blocks routine apt upgrade)
+sudo apt-get update && sudo apt-get install -y kubelet=1.35.1-1.1 kubectl=1.35.1-1.1  # pin EXACT version
+sudo apt-mark hold kubelet kubectl                # re-pin immediately
+sudo systemctl daemon-reload && sudo systemctl restart kubelet  # new binary on disk != upgraded process
+apt-cache policy kubelet                          # DEBUG "version not found": shows versions + SOURCE REPO
+# hold guards TIMING (patch drift, un-drained restart); per-minor repo guards MAGNITUDE (minor jumps)
+# hold is what makes routine `apt upgrade` for OS CVEs safe on a k8s node
+# /var/lib/kubelet/config.yaml is NOT package content — kubeadm writes it at init/join
+```
+
+# Stuck Pod Status → Cause Triage (5.1/5.2 cross-cutting)
+
+```bash
+kubectl describe pod <p> | grep -i '^Node:'   # EMPTY = scheduler's problem / ASSIGNED = kubelet's problem
+# Pending            -> not scheduled: requests too big, taint, affinity/nodeSelector, unbound PVC, scheduler down
+# ContainerCreating  -> CNI can't assign IP (most common), volume won't mount, image still pulling
+# ErrImagePull       -> bad tag, missing imagePullSecret, no registry route
+# CreateContainerConfigError -> referenced ConfigMap/Secret does not exist
+# CrashLoopBackOff   -> app crashes: kubectl logs --previous
+# Running 0/1 Ready  -> readiness probe failing (this is the empty-endpoints cause)
+kubectl logs <p> --previous                   # the corpse holds the evidence (cf. crictl ps -a)
+# lifecycle spine: schedule -> pull -> wire network -> run -> ready
+```
+
+# Cordon / Drain / Uncordon (1.3, hands-on)
+
+```bash
+kubectl cordon <node>                                          # SchedulingDisabled: no NEW pods, existing stay
+kubectl drain <node> --ignore-daemonsets --delete-emptydir-data # cordon + EVICT; flags = waivers you must sign
+kubectl uncordon <node>                                        # schedulable again; running pods do NOT rebalance back
+kubectl get pods -o wide                                       # verify where pods landed (drain moves movable pods off)
+# --ignore-daemonsets: DS pods are pinned per-node → evicting = pointless (recreated instantly)
+# --delete-emptydir-data: emptyDir is node-local scratch → eviction DESTROYS it, so drain makes you acknowledge
+```
+
+# Cluster Upgrades — kubeadm order (1.3, concept intro)
+
+```bash
+# RULES: one minor at a time (1.34→1.35, never skip); control plane FIRST, then workers
+# --- Control-plane node ---
+sudo kubeadm upgrade plan                              # shows target version
+sudo kubeadm upgrade apply v1.35.x                     # CP uses 'apply' — upgrades control-plane static pods
+kubectl drain <cp-node> --ignore-daemonsets            # then upgrade kubelet+kubectl pkgs
+sudo systemctl daemon-reload && sudo systemctl restart kubelet   # restart after installing new kubelet
+kubectl uncordon <cp-node>
+# --- Worker node (run kubectl from a box with cluster access) ---
+kubectl drain <worker> --ignore-daemonsets --delete-emptydir-data
+sudo kubeadm upgrade node                              # WORKER uses 'node', NOT 'apply' (syncs to CP's decision)
+kubectl get nodes -o wide                              # VERSION col = kubelet version per node
+```
 
 # Node Troubleshooting — kubelet break/fix (5.1 lab)
 
