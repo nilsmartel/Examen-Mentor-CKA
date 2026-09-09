@@ -1,3 +1,129 @@
+# PersistentVolumes & PVCs (4.2)
+
+```bash
+kubectl get pv,pvc                                   # ★ first move -- eyeball STATUS + the STORAGECLASS column on BOTH
+kubectl describe pvc <pvc>                            # Pending? Events tell you WHY: "storageclass X not found" vs "no volumes available"
+kubectl get pv <pv> -o jsonpath='{.spec.claimRef.name}{"\n"}'  # is it still pinned to a dead claim? (why Released won't rebind)
+kubectl edit pv <pv>                                 # delete claimRef: block => Released -> Available (the fix; no patch JSON)
+kubectl get pod <p> -o wide                          # NODE column -- a hostPath-backed PV is STILL node-local, data won't travel
+# no imperative generator for PV/PVC -- hand-author YAML or crib from kubernetes.io/docs (allowed in exam)
+```
+```
+# BINDING = a 3-field shape match, ALL must hold:  capacity (PV >= request; claim eats the WHOLE PV, no partitioning)
+#   + accessModes (PV offers SUPSERSET of requested)  + storageClassName (EXACT string equality).
+# storageClassName has THREE states:  omitted = default class (dynamic)  |  "" = static only, matches only ""  |
+#   "name" = provisioner reacts IF a StorageClass by that name exists (dynamic), else pure matching key (static).
+# Pod names the PVC, never the PV:  volumes: [{persistentVolumeClaim: {claimName: <pvc>}}]
+# Node-independence comes from the BACKEND, not the abstraction. hostPath PV = node-bound (no nodeAffinity => scheduler blind).
+# Lifecycles are independent: delete POD -> PVC+PV stay Bound. delete PVC (+Retain) -> PV -> Released (data kept, won't rebind).
+```
+
+# Volumes, Access Modes & Reclaim (4.1)
+
+```bash
+kubectl explain pod.spec.volumes                    # spec.volumes DECLARES once; containers[].volumeMounts REFERENCE by name
+kubectl exec shared -c reader -- cat /data/msg      # -c picks the container: proves an emptyDir is shared pod-wide
+kubectl get pod hp -o wide                          # ★ NODE column -- run it BEFORE deleting, hostPath lives on that node only
+kubectl describe pod broken-mount | tail -15        # ContainerCreating => evidence is in EVENTS, `logs` is impossible
+minikube ssh -n minikube-m02 -- sudo ls /mnt/labdata  # -n targets a specific node (default is the `minikube` node)
+kubectl edit pv <name>                              # delete the claimRef: block => Released -> Available (no patch JSON needed)
+```
+```
+# TWO LIFECYCLES. A container "restart" = a BRAND-NEW CONTAINER FROM THE IMAGE (that's why each attempt gets its
+#   own N.log). Its writable layer is WIPED every time. emptyDir fills the gap: scoped to the POD.
+#   emptyDir lives at /var/lib/kubelet/pods/<POD-UID>/volumes/kubernetes.io~empty-dir/<name>
+#   ...same pod UID as /var/log/pods/<ns>_<pod>_<POD-UID>/<ctr>/0.log  -> SAME KEY.
+#   => survives container restarts (same UID) / dies with the pod (new pod = new UID = guaranteed-empty dir).
+#   Use for: crash-survival + SIDECARS (one dir, two containers, no network). `sizeLimit: 500Mi` or it can fill the node.
+#
+# hostPath = a dir on THE NODE. Survives the pod, does NOT survive a RESCHEDULE. Pods move; the data doesn't.
+#   ★ EXAM SCENARIO: "ran fine a week, data vanished overnight, nobody changed anything" => POD MOVED NODES.
+#   type: Directory       = an ASSERTION, kubelet verifies it exists -> missing => stuck ContainerCreating/FailedMount
+#   type: DirectoryOrCreate = create it if absent
+#   Security: a pod mounting hostPath /etc/kubernetes reads admin.conf and owns the cluster. Hence restricted.
+#
+# ACCESS MODES ARE NODE-SCOPED (except one!) -- matching attribute between PVC (shopping list) and PV (inventory):
+#   RWO  ReadWriteOnce     r/w by a single NODE   <- 3 replicas on the SAME node all mount it FINE. "Once" != one pod.
+#   ROX  ReadOnlyMany      read-only, many nodes
+#   RWX  ReadWriteMany     r/w many nodes -- needs an NFS/CephFS-class backend, NOT any storage
+#   RWOP ReadWriteOncePod  r/w by a single POD    <- the only pod-scoped one; exists because RWO is so misread
+#
+# RECLAIM POLICY (on the PV) IS EVENT-DRIVEN, NOT GARBAGE COLLECTION. Fires when a BOUND PVC is deleted.
+#   An Available PV that was never claimed is NEVER swept, however long it sits.
+#   Delete = PV + backing storage destroyed (usual default for dynamic provisioning)
+#   Retain = data kept, PV -> `Released`, A DELIBERATE DEAD END: it will NOT rebind however well it matches.
+#     Why: binding is SHAPE-MATCHING (class + accessModes + capacity), so auto-rebinding would hand
+#     team A's payroll data to team B. A human must decide. (`Recycle` is deprecated -- ignore it.)
+#   ★ TELL-TALE PAIR: `PVC Pending` + `PV Released` -> stale binding. Fix = clear claimRef.
+#   Pinning levers (opt-in, vs default shape-matching): PVC.spec.volumeName / PV.spec.claimRef / PVC.spec.selector
+#
+# POD SPECS ARE ALMOST ENTIRELY IMMUTABLE. Can't edit volumes/env/resources on a live pod -- apiserver rejects it.
+#   Mutable short-list ~= image, activeDeadlineSeconds, adding tolerations.
+#   => to change a volume: DELETE + RECREATE (bare pod), or edit the TEMPLATE and let the rollout replace pods.
+#   PVs are not pods -- `kubectl edit pv` works fine.
+#
+# volumeMode: Filesystem (default) | Block (raw device)
+# Docs: /docs/concepts/storage/volumes/ and /docs/concepts/storage/persistent-volumes/
+```
+
+# Autoscaling / HPA (3.3)
+
+```bash
+kubectl autoscale deploy php --cpu=50% --min=1 --max=5   # % => Utilization (NEEDS requests). --cpu-percent is DEPRECATED
+kubectl autoscale deploy php --cpu=500m --min=1 --max=5  # quantity => AverageValue (absolute, needs NO requests)
+kubectl set resources deploy php --requests=cpu=100m --limits=cpu=200m  # the fix for <unknown>; edits the pod TEMPLATE -> rollout
+kubectl get hpa php -w                     # ★ read the TARGETS column: "<unknown>/50%" = decorative HPA, never scales
+kubectl describe hpa php | tail -10        # Events log every decision + its reason. Where you debug an HPA
+kubectl config set-context --current --namespace=hpa-fun  # saves typing -n; also a fail-silent trap (check get-contexts)
+```
+```
+# HPA = more/fewer PODS.  VPA = bigger/smaller pods (right-sizing requests).  Cluster Autoscaler = more/fewer NODES.
+# THE FRACTION:  utilization = actual / REQUESTED.  "50% CPU" means "half of what the pod asked for", not half a core.
+#   => resources:{} means the DENOMINATOR IS ZERO => TARGETS "<unknown>" => HPA silently never scales. FAIL-SILENT:
+#      `kubectl autoscale` SUCCEEDS, the object looks fine in `get hpa`, and nothing ever happens.
+#   <unknown> has exactly TWO causes: (1) no metrics-server / dead metrics API   (2) pods have no cpu REQUESTS
+# THE MATH:  desiredReplicas = ceil( currentReplicas x currentMetric / targetMetric )
+#   Computed in ONE SHOT, not incrementally. 1 pod at 250% with target 50% => ceil(1 x 250/50) = 5 => jumps 1->5 at once.
+#   (rate limiter for huge jumps: won't more than double, or add 4 pods, per 15s)
+# TWO TARGET TYPES (autoscaling/v2 `target.type`):
+#   Utilization  (--cpu=50%)  = ratio, needs requests   | AverageValue (--cpu=500m) = absolute, needs nothing
+#   BUT still set requests anyway: no requests => BestEffort => invisible to the scheduler + evicted first.
+# WHY IT SEEMS SLOW (30-60s is NORMAL, not a fault): metrics-server scrapes every 15s + CPU is a rate (needs 2 scrapes)
+#   + HPA controller re-evaluates every 15s.
+# ASYMMETRY: scale UP fast (seconds) / scale DOWN waits a 5-MINUTE stabilization window (takes the max over the window).
+#   Deliberate: prevents flapping. Scaling up is cheap insurance; scaling down bets the load is really gone.
+#   Trap: "replicas didn't drop, it's broken" -> no, you're inside the window.
+# ★ A RECONCILING LOOP ALWAYS BEATS A ONE-SHOT IMPERATIVE WRITE. `kubectl scale` on an HPA-managed deploy is
+#   overwritten within ~15s. Same pattern as: RS vs an edited live pod (3.1), kubelet vs an edited static pod (5.2).
+#   HPA and the Deployment controller are LAYERED, not rivals: HPA writes spec.replicas, the Deployment obeys it.
+```
+# Resource Usage Monitoring (5.3)
+
+```bash
+minikube addons enable metrics-server      # NOT installed by default. "addons" + "enable" — both words exact
+kubectl top nodes                          # CPU(cores) in millicores + % OF ALLOCATABLE (not of 1000m!)
+kubectl top pods -A --sort-by=cpu | head   # ★ FIND THE HOG — -A is the question; a hog hides on the node you didn't check
+kubectl top pod <pod> -n <ns> --containers # per-container breakdown (PLURAL = show all; -c/--container = pick one)
+kubectl describe node <node>               # read the bottom: "Allocated resources" = REQUESTS (grep -A6 "Allocated resources", lowercase r)
+kubectl get apiservice v1beta1.metrics.k8s.io   # ★ a Running pod ≠ a working API. This names the real failure
+```
+```
+# THE TWO LEDGERS — the whole lesson. They are independent and BOTH are true:
+#   requests = a RESERVATION. The scheduler's ONLY currency. It never calls the metrics API.   -> describe node
+#   limits   = a CEILING enforced by the kubelet.  CPU over -> THROTTLED. Memory over -> OOMKILLED.
+#   top      = ACTUAL consumption right now.                                                    -> kubectl top
+# => "node is 15% idle but pod is Pending/Insufficient cpu" = requests are committed, not consumed. Hotel: rooms BOOKED, guests absent.
+# => a `kubectl run` pod has resources:{} => QoS BestEffort => charged 0 => INVISIBLE to the scheduler
+#    (it can burn a full core while its node reads 0% allocated — and the scheduler keeps packing pods onto it)
+# You may overcommit LIMITS. You may NEVER overcommit REQUESTS (hard-capped at allocatable).
+# top node != sum of top pods — the node figure includes OS + kubelet + containerd + kernel.
+# capacity vs allocatable: scheduler only ever spends ALLOCATABLE (capacity - kube/system-reserved - eviction headroom).
+# 1000m = 1 core (absolute). "%" = share of THAT NODE's allocatable (5-core node: 1000m shows as 20%).
+# CPU is compressible (throttle, survives); memory is not (OOMKill, dies).
+# NO metrics-server => kubectl top errors "Metrics API not available" AND HPA reports <unknown> and never scales.
+# kubectl is FORGIVING on resource types (node=nodes=no) and STRICT on subcommands/flags (logs, addons, --containers).
+```
+
 # Container Output & Logging (5.4)
 
 ```bash
