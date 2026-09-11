@@ -1,3 +1,40 @@
+# Services & Networking Troubleshooting (5.5)
+
+```bash
+kubectl -n <ns> get endpoints <svc>      # FIRST command. EMPTY => selector/label mismatch OR pods not Ready
+kubectl -n <ns> get endpointslices -l kubernetes.io/service-name=<svc>  # modern spelling (Endpoints deprecated v1.33+)
+kubectl -n <ns> get svc <svc> -o wide    # read the selector; compare to `get pods --show-labels`
+kubectl -n <ns> get pods                 # READY col 0/1 = failing readiness probe = dropped from endpoints (Running≠serving)
+kubectl -n <ns> run probe --image=busybox --restart=Never -i --rm -- wget -qO- --timeout=3 http://<svc>  # one-shot probe
+kubectl -n <ns> get netpol               # LAST hop: a default-deny NetworkPolicy silently drops traffic w/ everything else green
+```
+```
+# Request path: DNS -> Service(ClusterIP) -> EndpointSlice(pod IPs) -> kube-proxy -> Pod -> container port  (NetworkPolicy can block anywhere)
+# Checklist: endpoints? -> pods Ready? -> targetPort==container bind port? -> DNS resolves? -> NetworkPolicy?
+# targetPort must equal the app's ACTUAL bind port; containerPort/Host Port are cosmetic. Populated eps + refused/timeout => wrong targetPort.
+# NetworkPolicy is additive/whitelist & off-until-touched: no policy=allow-all; podSelector:{} + policyTypes:[Ingress] + no rules = deny-all-in.
+```
+
+# StorageClasses & Dynamic Provisioning (4.3)
+
+```bash
+kubectl get sc                                       # which one is (default)? a PVC with NO storageClassName rides it
+kubectl get sc standard -o yaml | grep -E "provisioner|volumeBindingMode|reclaimPolicy"  # the 3 fields that matter
+kubectl describe pvc <pvc>                            # Pending? "ExternalProvisioning...verify provisioner running" => provisioner missing/denied
+minikube addons list | grep storage                  # on minikube the provisioner is the storage-provisioner ADDON (not built-in)
+minikube addons enable storage-provisioner           # no provisioner pod => dynamic PVs never get made
+kubectl edit clusterrole system:persistent-volume-provisioner  # WFC needs `nodes get` at cluster scope; add it live (no restart)
+```
+```
+# StorageClass = the TEMPLATE/recipe stamped onto every PV it mints (reclaimPolicy, volumeBindingMode, params). Size comes from the PVC.
+# volumeBindingMode:  Immediate = provision PV the instant the PVC exists  |  WaitForFirstConsumer = wait for a POD to be
+#   scheduled, THEN provision topology-local to that node. Under WFC a Pending PVC with no pod is NORMAL -> schedule a pod (not a bug).
+# WFC makes the provisioner read the target Node (topology) => needs `get nodes`; Immediate never does (that's why the 403 was hidden).
+# Dynamic provisioning is PLUGGABLE: needs a live provisioner pod (CSI driver). RBAC is evaluated LIVE per-request; a reconciling
+#   controller self-heals the instant you clear the blocker -- no restart, no re-trigger.
+# Dynamic PV capacity: EXACT on hostpath; rounds UP on real cloud disks (EBS/PD min granularity).
+```
+
 # PersistentVolumes & PVCs (4.2)
 
 ```bash
