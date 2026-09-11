@@ -1,3 +1,15 @@
+# Network Policies (2.5)
+
+```bash
+kubectl -n <ns> get networkpolicy                                   # list policies; a pod NOT selected by any = wide open
+kubectl -n <ns> describe networkpolicy <name>                       # read the from/to peers + ports; check dash placement (AND vs OR)
+kubectl -n <ns> edit networkpolicy <name>                           # live-fix a policy (rules take effect immediately)
+kubectl -n <ns> exec <client> -- wget -qO- --timeout=3 http://<svc> # prove enforcement: allowed=HTML, blocked=timeout
+# default-deny ingress: spec.podSelector:{} + policyTypes:[Ingress], no rules  ({} = ALL pods, not none)
+# separate '-' items = OR ; podSelector+namespaceSelector under ONE '-' = AND (the exam trap)
+# default-deny EGRESS also blocks DNS -> allow egress to kube-system CoreDNS on port 53 (UDP+TCP)
+```
+
 # Services & Networking Troubleshooting (5.5)
 
 ```bash
