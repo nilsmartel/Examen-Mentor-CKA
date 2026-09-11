@@ -4,20 +4,21 @@
 > Status: `⬜ Not started` · `🟡 In progress` · `✅ Mastered` (only ✅ counts toward completion).
 > Overall % is **weighted by exam domain** — see the formula at the bottom.
 
-## 📊 Overall: ~68% complete  *(weighted by exam domain — see formula at bottom)*
+## 📊 Overall: ~72% complete  *(weighted by exam domain — see formula at bottom)*
 
-`██████████████░░░░░░` 17 / 27 lessons mastered · the bar tracks **weighted %**, not the raw lesson count
+`██████████████░░░░░░` 18 / 27 lessons mastered · the bar tracks **weighted %**, not the raw lesson count
 
-> ▶️ **NEXT SESSION — start here:** **5.5 mastered 09-11 — TROUBLESHOOTING DOMAIN COMPLETE (30% → 5/5). ↑ 62%→68%.**
-> Ran the full request-path trace COLD across all three seeded breaks (selector, targetPort, default-deny NetworkPolicy)
-> — see the 5.5 row. **The two biggest remaining domains are Cluster Architecture (25%, 4/8) and Services & Networking
-> (20%, 2/6).**
-> 🟢 **STRONGEST NEXT PICK = `2.5 Network Policies`** — the cluster is **freshly rebuilt on Calico (09-11)** and
-> NetworkPolicy ENFORCES here; he just met the default-deny pattern live and got the additive/whitelist model
-> ("no policy=allow-all; podSelector:{}+Ingress+no rules=deny-all-in"). Do it NOW while Calico is up so we don't
-> rebuild again. **`2.6 CoreDNS`** also pairs well (the DNS hop he under-weighted in the 5.5 checklist). No-rebuild
-> alternatives if he wants a change of domain: **3.5 Scheduling** (owns requests/limits + WFC topology) or **3.4 Self-healing**
-> (readiness probes just came up live in 5.5 — natural bridge).
+> ▶️ **NEXT SESSION — start here:** **2.5 Network Policies mastered 09-11 — Services & Networking now 3/6. ↑ 68%→72%.**
+> Did the whole lesson strong: sharpened "restrict"→"flip to deny, then whitelist back"; got direction-independence
+> after one correction (Ingress-only policy leaves egress open); **nailed the AND/OR dash-placement trap COLD** in the
+> teaching phase AND then **diagnosed it live, unaided, in the break-it/fix-it** (I folded namespaceSelector under one
+> `-` so client broke — he read it straight off the structure). Got multi-policy additivity (union of allow-rules, no
+> deny-precedence) + the DNS-egress gotcha. Confidence **3/5** (slightly under — performance was 4). See 2.5 row.
+> 🟢 **STRONGEST NEXT PICK = `2.6 CoreDNS`** — closes the last Calico-friendly Services topic while the DNS material is
+> warm (he just used "allow egress to CoreDNS:53" as the fix, and DNS was the checklist rung he kept dropping in 5.5).
+> After that the big remaining rock is **Cluster Architecture (25%, 4/8)** — 1.4 HA / 1.6 Helm-Kustomize / 1.7 CNI-CSI-CRI /
+> 1.8 CRDs all untouched. No-rebuild alternatives for a domain change: **3.4 Self-healing** (readiness probes are warm from
+> 5.5+2.5) or **3.5 Scheduling** (owns requests/limits + WFC topology).
 > ⚠️ Warm-up due (quiz lightly): (1) **5.5 checklist in order** — endpoints → pods Ready? → targetPort → **DNS** → NetworkPolicy
 > (he dropped DNS on the C2 recall — re-ask). (2) **readiness vs liveness** — readiness gates ENDPOINT membership (READY col
 > 0/1), liveness gates RESTARTS. **Now DONE HANDS-ON 09-11** — ran the `notready` demo, saw a Running+correctly-labeled pod
@@ -40,7 +41,7 @@
 > incrementally *on purpose* (sends a partial reply because it is easier to read), so an unanswered sub-question
 > is a reading-order artefact, not avoidance. Just re-ask it plainly with no commentary. See Weak spots.
 
-**Strong:** **Troubleshooting (5/5 — DOMAIN COMPLETE ✅)**, **Storage (3/3 — DOMAIN COMPLETE ✅)**, Cluster Architecture (4/8), **Workloads (3/5)**, Services & Networking (2/6)
+**Strong:** **Troubleshooting (5/5 — DOMAIN COMPLETE ✅)**, **Storage (3/3 — DOMAIN COMPLETE ✅)**, Cluster Architecture (4/8), **Workloads (3/5)**, Services & Networking (3/6)
 
 ---
 
