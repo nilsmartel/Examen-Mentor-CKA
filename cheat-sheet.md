@@ -1,3 +1,16 @@
+# Self-Healing Primitives (3.4)
+
+```bash
+kubectl explain pod.spec.containers.startupProbe          # discover probe fields (handler + tunables) instead of guessing
+kubectl get pod <p> -w                                    # watch: RESTARTS climbs=liveness killing; READY 0/1=readiness gating
+kubectl rollout restart daemonset/calico-node -n kube-system  # fix CNI "401 Unauthorized" sandbox failures (stale CNI token)
+# THREE PROBES: startup="booted yet?" gates the other two (slow starters) → liveness="alive?" RESTARTS container → readiness="ready?" in/out of endpoints (no restart)
+# startup vs liveness = SAME test, different PATIENCE. startup runway = periodSeconds × failureThreshold (set > boot time)
+# liveness initialDelaySeconds << boot time ⇒ crash-loop of a HEALTHY app; the fix is startupProbe, not a bigger initialDelay
+# probe fields are IMMUTABLE on a running pod ⇒ edit YAML + delete/recreate (kubectl edit rejects the change)
+# CONTROLLER PICKER: Deployment/RS=N stateless interchangeable · DaemonSet=1-per-node · StatefulSet=stable identity (needs headless svc clusterIP:None) · Job/CronJob=run-to-completion
+```
+
 # CoreDNS & Cluster DNS (2.6)
 
 ```bash
