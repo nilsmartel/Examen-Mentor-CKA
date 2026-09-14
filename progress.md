@@ -4,9 +4,9 @@
 > Status: `⬜ Not started` · `🟡 In progress` · `✅ Mastered` (only ✅ counts toward completion).
 > Overall % is **weighted by exam domain** — see the formula at the bottom.
 
-## 📊 Overall: ~75% complete  *(weighted by exam domain — see formula at bottom)*
+## 📊 Overall: ~78% complete  *(weighted by exam domain — see formula at bottom)*
 
-`███████████████░░░░░` 19 / 27 lessons mastered · the bar tracks **weighted %**, not the raw lesson count
+`████████████████░░░░` 20 / 27 lessons mastered · the bar tracks **weighted %**, not the raw lesson count
 
 > ▶️ **NEXT SESSION — start here:** **2.6 CoreDNS mastered 09-11 (2nd session that day) — Services & Networking now 4/6. ↑ 72%→75%.**
 > Light-concept lesson, taught strong. **★ He independently surfaced the chicken-and-egg** ("to resolve `kube-dns` I'd need
