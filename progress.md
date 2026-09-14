@@ -77,7 +77,7 @@
 > incrementally *on purpose* (sends a partial reply because it is easier to read), so an unanswered sub-question
 > is a reading-order artefact, not avoidance. Just re-ask it plainly with no commentary. See Weak spots.
 
-**Strong:** **Troubleshooting (5/5 — DOMAIN COMPLETE ✅)**, **Storage (3/3 — DOMAIN COMPLETE ✅)**, Services & Networking (4/6), Cluster Architecture (4/8), **Workloads (3/5)**
+**Strong:** **Troubleshooting (5/5 — DOMAIN COMPLETE ✅)**, **Storage (3/3 — DOMAIN COMPLETE ✅)**, **Workloads (4/5)**, Services & Networking (4/6), Cluster Architecture (4/8)
 
 ---
 
