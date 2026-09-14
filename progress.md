@@ -8,7 +8,37 @@
 
 `████████████████░░░░` 20 / 27 lessons mastered · the bar tracks **weighted %**, not the raw lesson count
 
-> ▶️ **NEXT SESSION — start here:** **2.6 CoreDNS mastered 09-11 (2nd session that day) — Services & Networking now 4/6. ↑ 72%→75%.**
+> ▶️ **NEXT SESSION — start here:** **3.4 Self-healing primitives mastered 09-14 — Workloads now 4/5. ↑ 75%→78%.**
+> Strong session, drove the fix cold. Three probes locked EXPERIENTIALLY (watched RESTARTS climb on liveness, READY 0/1 on
+> readiness, RESTARTS stay 0 once a startupProbe absorbed the boot). Controller-picker 4/4 cold (DaemonSet/Deployment/StatefulSet/
+> CronJob). **★ A real unscripted break beat my scripted one:** my `slowboot` pod landed on m02 and hit a live **Calico CNI failure**
+> — `FailedCreatePodSandBox … calico failed (add): error getting ClusterInformation: connection is unauthorized: **Unauthorized**` (HTTP
+> 401 = expired CNI token, NOT 403/RBAC). He read the events, correctly said "this turned out differently than you expected," and
+> pasted the smoking gun. **Env fix (mine):** `kubectl rollout restart daemonset/calico-node -n kube-system` regenerated the CNI
+> kubeconfig token on both nodes → sandboxes came back. **⚠️ WATCH: the Calico CNI token expires (~periodically on this minikube
+> rebuild) → new pods fail sandbox with 401. If a lab shows `FailedCreatePodSandBox … Unauthorized`, restart calico-node first.**
+> Then the intended break/fix ran clean: liveness `initialDelaySeconds:5` vs a 40s boot ⇒ crash-loop of a HEALTHY app; he first
+> reached for a bigger `initialDelay` (the workaround) → nudged to **startupProbe** (the purpose-built tool). **He then wrote the
+> startupProbe with INVERTED polarity** (`if [ -f /tmp/healthy ]; exit 1` = succeeds while file ABSENT) → one Socratic trace
+> ("at t=2s the file's absent, so your probe SUCCEEDS — then what?") and he saw it, rewrote to `cat /tmp/healthy` + `periodSeconds:5
+> failureThreshold:10` (50s runway). Cemented: **startup vs liveness = same test, different patience.** Self-test 2/2 (readiness=no
+> restart; StatefulSet needs headless svc — said "type: ClusterIP", sharpened to `clusterIP: None`). Confidence: didn't state a number
+> (performance was a clear 4). See 3.4 row.
+> ⚠️ **Egress-direction slip AGAIN (verify it sticks):** warm-up 09-14, single-pod-DNS-blind → said the blocking netpol was
+> **ingress**, self-corrected to **egress** on one nudge ("which way is a DNS query leaving the pod?"). **3rd time** he's led with
+> ingress then corrected. Keep on a SHORT leash; quiz cold.
+> ✅ **kube-proxy NOT in the data path — CLEAN COLD 09-14.** "kube-proxy just configures the node's NAT." The 09-11 misconception is
+> dead; push this item out.
+> ✅ **Find-the-hog EXACT spelling — FIXED 09-14.** Gave `k top pods -A --sort-by=cpu` with the `pod` subresource this time (dropped
+> it on 09-11). Push out.
+> ✅ **Scoped-vs-broad DNS failure — solid cold 09-14.** cluster-wide=CoreDNS (a Deployment, fix with kubectl), one-pod=its egress
+> netpol. Also asked the sharp question "how do I differentiate CNI-missing from CoreDNS-broken?" → taught scope (curl-by-IP works
+> but by-name fails ⇒ CoreDNS; nothing works ⇒ CNI). Push out.
+> 🟢 **STRONGEST NEXT PICK = `3.5 Scheduling (affinity, taints, limits)`** — closes the Workloads domain (would go 5/5), builds directly
+> on his strong 5.3 requests/limits ledgers, and taints/affinity are guaranteed exam earners. Alt: **start the Cluster-Architecture
+> reservoir** (25%, still 4/8) — 1.4 HA / 1.6 Helm-Kustomize / 1.7 CNI-CSI-CRI / 1.8 CRDs all ⬜; **1.7 CNI/CSI/CRI is well-primed**
+> now (he's just seen a live CNI 401, and asked "why a CNI at all?" back on 09-03). **Biggest remaining reservoir = Cluster Architecture.**
+> ⏸️ (superseded 09-14 — kept for history) **2.6 CoreDNS mastered 09-11 — Services & Networking 4/6.**
 > Light-concept lesson, taught strong. **★ He independently surfaced the chicken-and-egg** ("to resolve `kube-dns` I'd need
 > CoreDNS — so how does it resolve?") — the exact paradox that makes the lesson worth teaching. Resolved it via his own
 > 5.3 model: **resolv.conf holds the raw `nameserver 10.96.0.10` (Service ClusterIP as a literal number), reached by NAT,
