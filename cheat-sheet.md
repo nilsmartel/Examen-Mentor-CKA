@@ -1,3 +1,18 @@
+# CoreDNS & Cluster DNS (2.6)
+
+```bash
+kubectl get svc -n kube-system kube-dns                       # the DNS Service (name is 'kube-dns', NOT coredns); ClusterIP ~10.96.0.10
+kubectl get pods -n kube-system -l k8s-app=kube-dns           # the CoreDNS pods (Deployment 'coredns', NOT a static pod)
+kubectl -n kube-system get configmap coredns -o yaml          # the Corefile (where cluster DNS behavior is tuned)
+kubectl run t --image=busybox:1.28 --restart=Never -i --rm -- nslookup <svc>.<ns>.svc.cluster.local  # verify resolution (busybox:1.28!)
+kubectl run t --image=busybox:1.28 --restart=Never -i --rm -- cat /etc/resolv.conf                   # nameserver=ClusterIP, search list, ndots:5
+kubectl -n kube-system scale deploy coredns --replicas=2      # fix cluster-wide DNS-down (it's a Deployment: scale, don't ssh)
+# FQDN: <svc>.<ns>.svc.cluster.local  |  pods: <ip-dashes>.<ns>.pod.cluster.local
+# short name works: <5 dots => resolv.conf 'search' appends suffixes; first suffix = querying pod's OWN ns => cross-ns needs <svc>.<ns>
+# DNS down EVERYWHERE => CoreDNS itself (pods/kube-dns svc). DNS down for ONE pod => that pod's EGRESS NetworkPolicy blocking :53.
+# kube-proxy is NOT a hop: it writes NAT rules into each node's kernel; the kernel netfilter is the dataplane (=> ping ClusterIP fails, curl works)
+```
+
 # Network Policies (2.5)
 
 ```bash
