@@ -1,3 +1,28 @@
+# Extension Interfaces: CRI / CNI / CSI (1.7)
+
+```bash
+sudo crictl version                                  # CRI: RuntimeName (containerd/CRI-O; here docker via cri-dockerd). crictl NOT docker; crictl info|grep is fiddly
+sudo crictl ps -a                                    # CRI-level containers on the node (the -a = crashed corpses); your window when kubectl/apiserver is dead
+ls /etc/cni/net.d/                                   # CNI config; first alphabetical valid .conflist WINS (installers disable rivals → .conflist.disabled)
+kubectl get pods -n kube-system -o wide | grep -Ei "calico|flannel|cilium|kindnet"  # CNI = DaemonSet, 1 per node (calico-node); kube-controllers = Deployment/1
+kubectl get csidrivers                               # CSI drivers; EMPTY ≠ no storage — legacy provisioners (k8s.io/minikube-hostpath) work w/o CSI
+kubectl get sc -o custom-columns=NAME:.metadata.name,PROVISIONER:.provisioner  # provisioner field names WHATEVER provisions (CSI driver OR legacy)
+# absent CNI → node NotReady · broken-mid-life CNI → new pods ContainerCreating · NetworkPolicy needs a policy-capable CNI (Calico/Cilium; plain Flannel silently ignores)
+# CSIDriver/CSINode = built-in objects NOT CRDs; kubelet writes CSINode via node-driver-registrar sidecar. cgroupDriver must match kubelet↔runtime
+```
+
+# Scheduling: Affinity, Taints & Tolerations (3.5)
+
+```bash
+kubectl taint nodes <node> gpu=true:NoSchedule       # repel pods; trailing - REMOVES it (gpu=true:NoSchedule-)
+kubectl label node <node> disktype=ssd               # node label = target for nodeSelector/affinity (disktype- removes)
+kubectl describe pod <p> | grep -A5 Events           # "why Pending?" lives on the POD: untolerated taint / didn't match selector
+kubectl edit pod <p>                                 # tolerations are MUTABLE in place (with image, activeDeadlineSeconds)
+# taint=REPEL · toleration=PERMIT (never attract) · nodeSelector/affinity=ATTRACT → onto a tainted node you need BOTH
+# effects: NoSchedule · PreferNoSchedule · NoExecute (evicts running; +tolerationSeconds = NotReady 5-min grace)
+# required…=HARD (→Pending) vs preferred…=SOFT (schedules anyway); affinity evaluated at SCHEDULE time only
+```
+
 # Self-Healing Primitives (3.4)
 
 ```bash
