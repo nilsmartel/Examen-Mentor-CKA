@@ -10,7 +10,7 @@ kubectl get pods -n ingress-nginx                       # wait for controller Ru
 
 kubectl create deploy web --image=nginx --port=80
 kubectl expose deploy web --port=80
-kubectl create deploy api --image=hashicorp/http-echo -- -text=hello-api -listen=:5678
+kubectl create deploy api --image=hashicorp/http-echo -- /http-echo -text=hello-api -listen=:5678  # /http-echo FIRST: args after -- become `command`, which OVERRIDES the image ENTRYPOINT
 kubectl expose deploy api --port=80 --target-port=5678       # http-echo listens on 5678
 ```
 

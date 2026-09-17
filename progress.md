@@ -3,13 +3,13 @@
 > The mentor (Kube) maintains this file — the single source of truth for where the learner is.
 > Status: `⬜ Not started` · `🟡 In progress` · `✅ Mastered` (only ✅ counts). Overall % is **weighted by exam domain** (formula at bottom).
 
-## 📊 Overall: ~84% complete
+## 📊 Overall: ~87% complete
 
-`█████████████████░░░` 22 / 27 lessons mastered · bar tracks **weighted %**, not raw count
+`█████████████████░░░` 23 / 27 lessons mastered · bar tracks **weighted %**, not raw count
 
-**Strong:** Troubleshooting (5/5 ✅) · Storage (3/3 ✅) · **Workloads (5/5 ✅)** · Services & Networking (4/6) · Cluster Architecture (5/8)
+**Strong:** Troubleshooting (5/5 ✅) · Storage (3/3 ✅) · **Workloads (5/5 ✅)** · Services & Networking (5/6) · Cluster Architecture (5/8)
 
-> ▶️ **NEXT SESSION:** interleave back to **Services & Networking** — **2.3 Ingress controllers & resources** (weight 20%, well-prepped: 2.2 Services owned, opens the last Svc&Net pair with 2.4 Gateway). **Alts:** 1.6 Helm/Kustomize (guaranteed-earner, hands-on), or 1.8 CRDs & operators (natural follow to 1.7 — CRDs *extend* the API the way CNI/CSI/CRI extend the node; previewed operator read/write-split in 2.2). 5 lessons remain: Domain 01 (1.4 HA, 1.6, 1.8) + Domain 02 (2.3, 2.4).
+> ▶️ **NEXT SESSION:** **2.4 Gateway API** — closes the Services & Networking domain (5/6→6/6) and is the natural pair to the Ingress model he just owned (Gateway = Ingress's successor: separates the infra role (Gateway/GatewayClass) from the routing role (HTTPRoute), the same controller-vs-resource split one layer more explicit). **Alts:** 1.6 Helm/Kustomize (guaranteed-earner, hands-on), or 1.8 CRDs & operators (Gateway API is *delivered as* CRDs — teaching 1.8 first would pre-explain why Gateway objects exist). 4 lessons remain: Domain 01 (1.4 HA, 1.6, 1.8) + Domain 02 (2.4).
 > ✅ Warm-up watch CLEARED: **single-pod-DNS-blind = EGRESS netpol** — 2026-09-14 he LED with egress (was ingress 3×). Direction now owned; keep in normal rotation.
 
 ---
@@ -55,7 +55,7 @@
 |--------|:------:|:----:|-------|
 | 2.1 Pod connectivity & network model | ✅ | 2026-08-05 | 4 model rules proven hands-on; port-collision break/fix. |
 | 2.2 Services & endpoints | ✅ | 2026-08-06 | Service→selector→Ready pods→EndpointSlice→kube-proxy→pod chain; empty-ep vs wrong-targetPort failure modes; headless svc; 3-port trichotomy. Conf 4/5. |
-| 2.3 Ingress controllers & resources | ⬜ | — | |
+| 2.3 Ingress controllers & resources | ✅ | 2026-09-17 | Controller-vs-resource split owned (resource=inert config in etcd; controller=nginx proxy + reconcile loop that rewrites nginx.conf). L7 placed on OSI (Service L3/L4, host/path routing L7, corrected his L6 guess). ingressClassName ≈ storageClassName incl. default-class orphan trap. Reasoned unprompted: no path-rewrite by default; targetPort opaque to Ingress. 503=backend broken/no-ep vs 404=no-rule heuristic. Live break/fix (bad Service name → 503). Also debugged a real http-echo crash himself (post-`--` command OVERRIDES ENTRYPOINT). Self-test 3/3, conf 5/5. |
 | 2.4 Gateway API | ⬜ | — | |
 | 2.5 Network Policies | ✅ | 2026-09-11 | Additive/off-until-touched, deny-by-omission, multi-policy = union. AND/OR dash trap owned. Direction-independence (policyTypes). Default-deny-egress→DNS gotcha. Conf 3/5 (under). |
 | 2.6 CoreDNS | ✅ | 2026-09-11 | FQDN `<svc>.<ns>.svc.cluster.local` + search/ndots:5; resolv.conf nameserver = kube-dns ClusterIP as raw number (NAT, no chicken-egg); coredns pods / kube-dns svc naming; break/fix scale coredns. Conf 3/5. |
@@ -96,15 +96,17 @@ On success push interval (~2d→5d→10d, cap 14d); on a miss reset to ~1d. Reti
 
 | Item / concept | Lesson | Next | Int | Note |
 |----------------|:------:|:----:|:---:|------|
+| **Ingress controller vs resource:** resource = inert host/path→Service rules in etcd (API never validates the backend exists — fail-silent); controller = the running proxy pod (nginx + reconcile loop) that actually routes. Applied an Ingress and nothing routes ⇒ **check the controller pod first** | 2.3 | 2026-09-19 | 2d | new; owned cold |
+| **Ingress 503 vs 404:** 503 = rule matched but **backend broken / Service has no endpoints** (debug the Service) · 404 = **no rule matched** host/path (debug the rules). Ingress = L7 (host/path); Service = L3/L4. `ingressClassName` ≈ `storageClassName` (2 controllers + no default marked ⇒ Ingress orphaned). `pathType` REQUIRED; no path rewrite by default | 2.3 | 2026-09-19 | 2d | new; 3/3 self-test |
 | **Three -I interfaces + inspect tool:** CRI=run containers (`crictl version`/`ps -a` on node, NOT docker) · CNI=pod networking (`/etc/cni/net.d/` + DaemonSet 1/node) · CSI=storage (`get csidrivers`, SC `provisioner` field). CRI/CNI node-local (ssh); CSI API-visible | 1.7 | 2026-09-18 | 2d | new; self-test 3/3 |
 | **CNI symptom split:** absent CNI ⇒ node **NotReady**; broken-mid-life CNI ⇒ new pods **ContainerCreating** (running pods survive). NetworkPolicy needs a **policy-capable CNI** (Calico/Cilium) — plain **Flannel** gives IPs but silently ignores policies | 1.7/2.5 | 2026-09-18 | 2d | new; got symptom + Flannel trap cold |
 | **`csidrivers` EMPTY ≠ no storage.** SC `provisioner` names WHATEVER provisions — a CSI driver (`ebs.csi.aws.com`) OR a legacy/addon provisioner (`k8s.io/minikube-hostpath` = storage-provisioner pod). CSIDriver/CSINode are **built-in objects NOT CRDs**; kubelet writes CSINode via the node-driver-registrar sidecar | 1.7 | 2026-09-18 | 2d | new; nailed "no, legacy provisioners" |
 | **minikube two layers:** `--driver=podman` builds the NODE (a podman container on the Mac); the **in-node runtime** runs the pods (here docker via `cri-dockerd` adapter). `crictl version` identifies it. cgroupDriver must MATCH kubelet↔runtime or node breaks | 1.7 | 2026-09-18 | 2d | new; surfaced the docker-not-containerd surprise himself |
-| **Taint/toleration polarity:** taint on a NODE repels; toleration on a POD only PERMITS (never attracts). Force a pod onto a tainted node ⇒ need BOTH toleration AND nodeSelector/affinity. Taint key=value matches the pod's TOLERATIONS, never its labels | 3.5 | 2026-09-16 | 2d | new; 3/3 self-test, conf 4/5 |
+| **Taint/toleration polarity:** taint on a NODE repels; toleration on a POD only PERMITS (never attracts). Force a pod onto a tainted node ⇒ need BOTH toleration AND nodeSelector/affinity. Taint key=value matches the pod's TOLERATIONS, never its labels | 3.5 | 2026-09-22 | 5d | ✅ clean 09-17 (led with the combo himself) |
 | **Three taint effects:** NoSchedule (block new) · PreferNoSchedule (soft) · NoExecute (block new + EVICT running non-tolerating). NoExecute + tolerationSeconds = the NotReady node auto-taint that evicts after ~5min (the 5.1 grace) | 3.5 | 2026-09-16 | 2d | new; inferred NoExecute cold |
 | **nodeAffinity required vs preferred:** requiredDuringScheduling…=HARD (no match ⇒ Pending) · preferred…=SOFT (schedules anyway). "Why Pending?" ⇒ `describe POD` (scheduler verdict lives there), NOT describe deployment | 3.5 | 2026-09-16 | 2d | new; missed the POD-not-deploy layer once |
 | **Three probes & failure action:** liveness→restart container in place · readiness→removed from endpoints, no restart · startup→gates the two, passes once then hands off | 3.4 | 2026-09-16 | 2d | new; crossed liveness↔readiness once |
-| **startupProbe = same test, different patience.** Runway = period × failureThreshold > boot; liveness initialDelay ≪ boot ⇒ crash-loop of a HEALTHY app; fix = startupProbe not a bigger delay. Probe fields immutable → edit YAML + recreate | 3.4 | 2026-09-16 | 2d | new; wrote it inverted, self-corrected |
+| **startupProbe = same test, different patience.** Runway = period × failureThreshold > boot; liveness initialDelay ≪ boot ⇒ crash-loop of a HEALTHY app; fix = startupProbe not a bigger delay. Probe fields immutable → edit YAML + recreate | 3.4 | 2026-09-22 | 5d | ✅ clean cold 09-17 |
 | **Controller picker:** Deployment=N stateless · DaemonSet=1/node (not plain-drainable, `--ignore-daemonsets`) · StatefulSet=stable identity, **needs headless `clusterIP:None`** · Job/CronJob=run-to-completion | 3.4 | 2026-09-19 | 5d | new; 4/4 cold |
 | **Single-pod-DNS-blind = that pod's own EGRESS netpol** blocking :53. Cluster-wide DNS down = CoreDNS itself (a **Deployment**, fix w/ kubectl scale/edit). Differentiate CNI-vs-CoreDNS by SCOPE: curl-by-IP works but by-name fails ⇒ CoreDNS; nothing works ⇒ CNI | 2.6/2.5 | 2026-09-19 | 5d | ✅ 09-14 LED with egress (direction cleared) |
 | **kube-proxy is NOT in the data path** — per-node daemon that writes NAT rules into the kernel; netfilter is the dataplane; no central hop | 2.6/2.1 | 2026-09-21 | 7d | ✅ clean cold 09-14 |
@@ -112,7 +114,7 @@ On success push interval (~2d→5d→10d, cap 14d); on a miss reset to ~1d. Reti
 | **CoreDNS naming:** Deployment/pods = `coredns` (label `k8s-app=kube-dns`); Service = `kube-dns` in kube-system; nameserver = its ClusterIP as raw number, reached by NAT | 2.6 | 2026-09-14 | 3d | |
 | **NetworkPolicy** additive/off-until-touched: no policy = allow-all; a policy selecting a pod flips that direction to default-deny; deny-by-omission; multi-policy = UNION (no deny-precedence) | 5.5/2.5 | 2026-09-18 | 7d | |
 | **NetworkPolicy AND/OR dash trap:** separate `-` items = OR; podSelector+namespaceSelector under ONE `-` = AND. Count the dashes | 2.5 | 2026-09-18 | 7d | ✅ 2nd cold confirm |
-| **NetworkPolicy direction-independence:** `policyTypes` declares which directions opt into deny; an Ingress-only policy leaves egress WIDE OPEN | 2.5 | 2026-09-13 | 2d | got wrong first, one nudge |
+| **NetworkPolicy direction-independence:** `policyTypes` declares which directions opt into deny; an Ingress-only policy leaves egress WIDE OPEN | 2.5 | 2026-09-22 | 5d | ✅ clean cold 09-17 (direction now owned) |
 | **Default-deny EGRESS silently blocks DNS** — add egress allow to kube-system CoreDNS :53 (UDP *and* TCP) | 2.5 | 2026-09-16 | 5d | |
 | **5.5 debug checklist IN ORDER:** endpoints → pods Ready? → targetPort → **DNS** → NetworkPolicy | 5.5 | 2026-09-16 | 5d | watch DNS (drops it) |
 | **Empty `get endpoints`** = selector/label mismatch OR pods not Ready; **populated + refused/timeout** = wrong `targetPort`. `get ep` (or endpointslices) is first move | 5.5/2.2 | 2026-09-19 | 5d | ✅ clean cold 09-14 |
@@ -168,6 +170,7 @@ On success push interval (~2d→5d→10d, cap 14d); on a miss reset to ~1d. Reti
 
 | Date | Topic | Outcome |
 |------|-------|---------|
+| 2026-09-17 | 2.3 Ingress controllers & resources | ✅ Mastered → Svc&Net 5/6, 84→87%. Controller-vs-resource split + L7 model owned; reasoned no-rewrite-by-default and targetPort-opaque unprompted; ingressClassName≈storageClassName incl. orphan trap. Live break/fix (bad Service → 503; built the 503-vs-404 heuristic). Bonus: self-diagnosed a real http-echo crash off the event (post-`--` command overrides ENTRYPOINT). Warm-up 3/3 cold (taint-combo, startupProbe, netpol direction). Self-test 3/3, conf 5/5. **Lab file `lab-2.3-ingress.md` has the same broken http-echo line — offered to patch.** |
 | 2026-09-16 | 1.7 Extension interfaces (CNI/CSI/CRI) | ✅ Mastered → Cluster-Arch 5/8, 81→84%. Pure inspection lab, all 3 interfaces ID'd live. Two great surprises he reasoned through: runtime=docker-via-cri-dockerd (untangled podman-driver vs in-node-runtime), and empty `csidrivers` w/ working storage (legacy minikube-hostpath provisioner ≠ CSI). Unprompted depth Q: is CSIDriver a CRD? (no). Warm-up: etcd clean; self-corrected static-pod (first said "edit the controller"); CNI Q3 answered honestly-unsure then owned. Self-test 3/3. |
 | 2026-09-14 | 3.5 Scheduling (affinity, taints, limits) | ✅ Mastered → **Workloads DOMAIN COMPLETE (5/5)**, 78→81%. Both forces + combo trap owned; inferred NoExecute cold and connected it to the 5.1 NotReady 5-min evict. Fixed a Pending pod live via `edit` (tolerations mutable). Warm-up: 3/3 cold, incl. leading with EGRESS on the single-pod-DNS item (direction cleared). Self-test 3/3, conf 4/5. |
 | 2026-09-14 | 3.4 Self-healing primitives | ✅ Mastered → Workloads 4/5, 75→78%. Probes locked live; controller-picker 4/4. Diagnosed a live Calico 401 CNI break off the events; fixed the intended crash-loop with a startupProbe after catching his own inverted polarity. Self-test 2/2. |
@@ -188,5 +191,5 @@ _(Older sessions 2026-08-04 → 08-27 established: 1.1 RBAC, 1.2 kubeadm, 1.3 li
 overall% = Σ ( domain_weight × mastered_in_domain / total_in_domain )
 domains:  01=25%/8   02=20%/6   03=15%/5   04=10%/3   05=30%/5
 ```
-Current: 01=25%×5/8=15.6 · 02=20%×4/6=13.3 · 03=15%×5/5=15.0 · 04=10%×3/3=10.0 · 05=30%×5/5=30.0 → **~84.0% ≈ 84%**.
+Current: 01=25%×5/8=15.6 · 02=20%×5/6=16.7 · 03=15%×5/5=15.0 · 04=10%×3/3=10.0 · 05=30%×5/5=30.0 → **~87.3% ≈ 87%**.
 Bar = 20 cells, `round(% / 5)` filled. Update Overall + bar whenever a status changes.

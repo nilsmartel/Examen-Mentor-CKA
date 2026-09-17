@@ -1,3 +1,16 @@
+# Ingress Controllers & Resources (2.3)
+
+```bash
+minikube addons enable ingress                       # installs ingress-nginx CONTROLLER (the proxy pod). No controller = Ingress does nothing
+kubectl get pods -n ingress-nginx                    # controller pod must be Running before any rule routes
+kubectl create ingress shop --class=nginx --rule="shop.example.com/api*=api:80" --rule="shop.example.com/*=web:80"  # */Prefix, no-*/Exact; pathType REQUIRED
+kubectl get ingress shop -o yaml | grep -A1 pathType # describe HIDES pathType — read the YAML for it
+kubectl port-forward -n ingress-nginx svc/ingress-nginx-controller 8080:80 &   # macOS podman: node IP unroutable, forward + curl localhost
+curl --resolve shop.example.com:8080:127.0.0.1 http://shop.example.com:8080/api # --resolve fakes DNS so Host: header routes
+# Ingress=L7 reverse proxy (host/path→Service:port); Service opaque behind it (targetPort invisible to Ingress). ingressClassName ≈ storageClassName (default-class trap: 2 controllers + no default = orphaned)
+# 503 through Ingress = backend broken / Service no endpoints (debug the Service) · 404 = no rule matched (debug the rules). No path rewrite by default (needs rewrite-target annotation)
+```
+
 # Extension Interfaces: CRI / CNI / CSI (1.7)
 
 ```bash
