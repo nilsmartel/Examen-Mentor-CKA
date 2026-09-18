@@ -3,14 +3,14 @@
 > The mentor (Kube) maintains this file — the single source of truth for where the learner is.
 > Status: `⬜ Not started` · `🟡 In progress` · `✅ Mastered` (only ✅ counts). Overall % is **weighted by exam domain** (formula at bottom).
 
-## 📊 Overall: ~87% complete
+## 📊 Overall: ~91% complete
 
-`█████████████████░░░` 23 / 27 lessons mastered · bar tracks **weighted %**, not raw count
+`██████████████████░░` 24 / 27 lessons mastered · bar tracks **weighted %**, not raw count
 
-**Strong:** Troubleshooting (5/5 ✅) · Storage (3/3 ✅) · **Workloads (5/5 ✅)** · Services & Networking (5/6) · Cluster Architecture (5/8)
+**Strong:** Troubleshooting (5/5 ✅) · Storage (3/3 ✅) · Workloads (5/5 ✅) · **Services & Networking (6/6 ✅ — DOMAIN COMPLETE)** · Cluster Architecture (5/8)
 
-> ▶️ **NEXT SESSION:** **2.4 Gateway API** — closes the Services & Networking domain (5/6→6/6) and is the natural pair to the Ingress model he just owned (Gateway = Ingress's successor: separates the infra role (Gateway/GatewayClass) from the routing role (HTTPRoute), the same controller-vs-resource split one layer more explicit). **Alts:** 1.6 Helm/Kustomize (guaranteed-earner, hands-on), or 1.8 CRDs & operators (Gateway API is *delivered as* CRDs — teaching 1.8 first would pre-explain why Gateway objects exist). 4 lessons remain: Domain 01 (1.4 HA, 1.6, 1.8) + Domain 02 (2.4).
-> ✅ Warm-up watch CLEARED: **single-pod-DNS-blind = EGRESS netpol** — 2026-09-14 he LED with egress (was ingress 3×). Direction now owned; keep in normal rotation.
+> ▶️ **NEXT SESSION:** **only Domain 01 remains — 3 lessons: 1.4 HA control plane, 1.6 Helm/Kustomize, 1.8 CRDs & operators.** Recommend **1.8 CRDs & operators** next — perfect continuity: today he installed the Gateway API *as a bundle of CRDs* live (`standard-install.yaml`), saw `get gatewayclass` fail with "server doesn't have a resource type" (the CRD-not-installed tell), and re-raised his old "is X a CRD?" curiosity (asked it about CSIDriver in 1.7). 1.8 explains *what he just did.* **Alt:** 1.6 Helm/Kustomize (guaranteed-earner, hands-on, pure imperative-speed) if he wants a break from API-machinery theory. 1.4 HA is the least exam-earning and hardest to reproduce on minikube — save for last / do as inspection + mental rehearsal.
+> ✅ Warm-up watch CLEARED: **single-pod-DNS-blind = EGRESS netpol** — 2026-09-14 he LED with egress. Direction owned; normal rotation.
 
 ---
 
@@ -49,14 +49,14 @@
 | 1.7 Extension interfaces (CNI/CSI/CRI) | ✅ | 2026-09-16 | Three -I's = jobs k8s refuses to hardcode: CRI=run (crictl NOT docker), CNI=network, CSI=storage. Inspected all 3 live. **Surprise finds, both instructive:** (1) runtime=docker via `cri-dockerd` adapter — untangled minikube driver(podman, builds node) vs in-node runtime(docker, runs pods); (2) `csidrivers` EMPTY yet storage works → minikube-hostpath is a LEGACY provisioner (storage-provisioner pod), not CSI. Asked unprompted whether CSIDriver is a CRD (no — built-in obj; CSINode written by kubelet via node-driver-registrar). CNI=Calico DaemonSet 1/node proven. cgroupDriver-must-match nugget. Self-test 3/3, conf 3/5 (self-assessed the topic as shallow/recognition-level — well-calibrated, not under-confidence). |
 | 1.8 CRDs & operators | ⬜ | — | Previewed the operator read/write-split pattern in 2.2. |
 
-## Domain 02 — Services & Networking (weight 20%, 6 lessons)
+## Domain 02 — Services & Networking (weight 20%, 6 lessons — DOMAIN COMPLETE ✅)
 
 | Lesson | Status | Last | Notes (concise) |
 |--------|:------:|:----:|-------|
 | 2.1 Pod connectivity & network model | ✅ | 2026-08-05 | 4 model rules proven hands-on; port-collision break/fix. |
 | 2.2 Services & endpoints | ✅ | 2026-08-06 | Service→selector→Ready pods→EndpointSlice→kube-proxy→pod chain; empty-ep vs wrong-targetPort failure modes; headless svc; 3-port trichotomy. Conf 4/5. |
 | 2.3 Ingress controllers & resources | ✅ | 2026-09-17 | Controller-vs-resource split owned (resource=inert config in etcd; controller=nginx proxy + reconcile loop that rewrites nginx.conf). L7 placed on OSI (Service L3/L4, host/path routing L7, corrected his L6 guess). ingressClassName ≈ storageClassName incl. default-class orphan trap. Reasoned unprompted: no path-rewrite by default; targetPort opaque to Ingress. 503=backend broken/no-ep vs 404=no-rule heuristic. Live break/fix (bad Service name → 503). Also debugged a real http-echo crash himself (post-`--` command OVERRIDES ENTRYPOINT). Self-test 3/3, conf 5/5. |
-| 2.4 Gateway API | ⬜ | — | |
+| 2.4 Gateway API | ✅ | 2026-09-18 | Successor to Ingress; **not built-in = CRDs** (`get gatewayclass` → "server doesn't have a resource type" is the tell). Three-resource role split owned: GatewayClass(vendor, names `controllerName` — 3rd sighting of the class→impl pattern after StorageClass `provisioner`/IngressClass `controller`) / Gateway(listener) / HTTPRoute(rules, attaches via `parentRefs`). **Authored a correct Gateway+HTTPRoute from the model, unaided** — even added `allowedRoutes.namespaces.from: Same` unprompted and explained it. Predicted the no-controller "Waiting for controller" empty-conditions state (= orphan, Gateway-API twin of the Ingress orphan trap). 503-vs-404 heuristic transferred cleanly; nailed `ResolvedRefs=False/BackendNotFound`→fix HTTPRoute. Got the two cross-ns gates (allowedRoutes vs ReferenceGrant). **No controller installed** (NGF release URL 404'd offline) → routing was dry-swum; authoring + condition-diagnosis (the graded skills) fully hands-on. Self-test clean, conf 4/5. |
 | 2.5 Network Policies | ✅ | 2026-09-11 | Additive/off-until-touched, deny-by-omission, multi-policy = union. AND/OR dash trap owned. Direction-independence (policyTypes). Default-deny-egress→DNS gotcha. Conf 3/5 (under). |
 | 2.6 CoreDNS | ✅ | 2026-09-11 | FQDN `<svc>.<ns>.svc.cluster.local` + search/ndots:5; resolv.conf nameserver = kube-dns ClusterIP as raw number (NAT, no chicken-egg); coredns pods / kube-dns svc naming; break/fix scale coredns. Conf 3/5. |
 
@@ -96,10 +96,12 @@ On success push interval (~2d→5d→10d, cap 14d); on a miss reset to ~1d. Reti
 
 | Item / concept | Lesson | Next | Int | Note |
 |----------------|:------:|:----:|:---:|------|
+| **Gateway API = 3 resources, 3 owners:** GatewayClass (vendor; names `controllerName` — like StorageClass `provisioner`/IngressClass `controller`) · Gateway (the listener: port/protocol/hostnames) · HTTPRoute (rules path→`backendRefs` Service:port; attaches via `parentRefs`). **Not built-in** — CRDs; `get gatewayclass` erroring "server doesn't have a resource type" = CRDs not installed, empty = installed but no controller | 2.4 | 2026-09-20 | 2d | new; authored it unaided |
+| **Gateway diagnosis:** HTTPRoute conditions empty/"Waiting for controller" = GatewayClass has **no controller** (orphan; Ingress-orphan twin) · `ResolvedRefs=False/BackendNotFound` = `backendRefs` names a missing Service (=503, fix the **HTTPRoute**). Two cross-ns gates: `Gateway.allowedRoutes.namespaces.from` (Same/All/Selector — route→gateway ATTACH) vs `ReferenceGrant` in target ns (route→backend Service) | 2.4 | 2026-09-20 | 2d | new; 503-vs-404 transferred cold |
 | **Ingress controller vs resource:** resource = inert host/path→Service rules in etcd (API never validates the backend exists — fail-silent); controller = the running proxy pod (nginx + reconcile loop) that actually routes. Applied an Ingress and nothing routes ⇒ **check the controller pod first** | 2.3 | 2026-09-19 | 2d | new; owned cold |
 | **Ingress 503 vs 404:** 503 = rule matched but **backend broken / Service has no endpoints** (debug the Service) · 404 = **no rule matched** host/path (debug the rules). Ingress = L7 (host/path); Service = L3/L4. `ingressClassName` ≈ `storageClassName` (2 controllers + no default marked ⇒ Ingress orphaned). `pathType` REQUIRED; no path rewrite by default | 2.3 | 2026-09-19 | 2d | new; 3/3 self-test |
 | **Three -I interfaces + inspect tool:** CRI=run containers (`crictl version`/`ps -a` on node, NOT docker) · CNI=pod networking (`/etc/cni/net.d/` + DaemonSet 1/node) · CSI=storage (`get csidrivers`, SC `provisioner` field). CRI/CNI node-local (ssh); CSI API-visible | 1.7 | 2026-09-18 | 2d | new; self-test 3/3 |
-| **CNI symptom split:** absent CNI ⇒ node **NotReady**; broken-mid-life CNI ⇒ new pods **ContainerCreating** (running pods survive). NetworkPolicy needs a **policy-capable CNI** (Calico/Cilium) — plain **Flannel** gives IPs but silently ignores policies | 1.7/2.5 | 2026-09-18 | 2d | new; got symptom + Flannel trap cold |
+| **CNI symptom split:** absent CNI ⇒ node **NotReady**; broken-mid-life CNI ⇒ new pods **ContainerCreating** (running pods survive). NetworkPolicy needs a **policy-capable CNI** (Calico/Cilium) — plain **Flannel** gives IPs but silently ignores policies | 1.7/2.5 | 2026-09-23 | 5d | ✅ clean cold 09-18 (gave the why for both symptoms) |
 | **`csidrivers` EMPTY ≠ no storage.** SC `provisioner` names WHATEVER provisions — a CSI driver (`ebs.csi.aws.com`) OR a legacy/addon provisioner (`k8s.io/minikube-hostpath` = storage-provisioner pod). CSIDriver/CSINode are **built-in objects NOT CRDs**; kubelet writes CSINode via the node-driver-registrar sidecar | 1.7 | 2026-09-18 | 2d | new; nailed "no, legacy provisioners" |
 | **minikube two layers:** `--driver=podman` builds the NODE (a podman container on the Mac); the **in-node runtime** runs the pods (here docker via `cri-dockerd` adapter). `crictl version` identifies it. cgroupDriver must MATCH kubelet↔runtime or node breaks | 1.7 | 2026-09-18 | 2d | new; surfaced the docker-not-containerd surprise himself |
 | **Taint/toleration polarity:** taint on a NODE repels; toleration on a POD only PERMITS (never attracts). Force a pod onto a tainted node ⇒ need BOTH toleration AND nodeSelector/affinity. Taint key=value matches the pod's TOLERATIONS, never its labels | 3.5 | 2026-09-22 | 5d | ✅ clean 09-17 (led with the combo himself) |
@@ -113,7 +115,7 @@ On success push interval (~2d→5d→10d, cap 14d); on a miss reset to ~1d. Reti
 | **Service DNS FQDN** `<svc>.<ns>.svc.cluster.local` (pods `<ip-dashes>.<ns>.pod...`); short name via `search`+`ndots:5`, first suffix = querying pod's own ns ⇒ cross-ns needs `<svc>.<ns>` | 2.6 | 2026-09-19 | 5d | ✅ clean cold 09-14 |
 | **CoreDNS naming:** Deployment/pods = `coredns` (label `k8s-app=kube-dns`); Service = `kube-dns` in kube-system; nameserver = its ClusterIP as raw number, reached by NAT | 2.6 | 2026-09-14 | 3d | |
 | **NetworkPolicy** additive/off-until-touched: no policy = allow-all; a policy selecting a pod flips that direction to default-deny; deny-by-omission; multi-policy = UNION (no deny-precedence) | 5.5/2.5 | 2026-09-18 | 7d | |
-| **NetworkPolicy AND/OR dash trap:** separate `-` items = OR; podSelector+namespaceSelector under ONE `-` = AND. Count the dashes | 2.5 | 2026-09-18 | 7d | ✅ 2nd cold confirm |
+| **NetworkPolicy AND/OR dash trap:** separate `-` items = OR; podSelector+namespaceSelector under ONE `-` = AND. Count the dashes | 2.5 | 2026-09-28 | 10d | ✅ 3rd cold confirm 09-18 (nailed the OR-split blast radius too) |
 | **NetworkPolicy direction-independence:** `policyTypes` declares which directions opt into deny; an Ingress-only policy leaves egress WIDE OPEN | 2.5 | 2026-09-22 | 5d | ✅ clean cold 09-17 (direction now owned) |
 | **Default-deny EGRESS silently blocks DNS** — add egress allow to kube-system CoreDNS :53 (UDP *and* TCP) | 2.5 | 2026-09-16 | 5d | |
 | **5.5 debug checklist IN ORDER:** endpoints → pods Ready? → targetPort → **DNS** → NetworkPolicy | 5.5 | 2026-09-16 | 5d | watch DNS (drops it) |

@@ -1,3 +1,15 @@
+# Gateway API (2.4)
+
+```bash
+kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.2.0/standard-install.yaml  # NOT built-in: installs CRDs (gatewayclasses/gateways/httproutes/grpcroutes/referencegrants)
+kubectl get gatewayclass                             # "server doesn't have a resource type" = CRDs not installed; empty = installed but NO controller registered a class
+kubectl explain httproute.spec.rules.backendRefs     # field discovery; group is gateway.networking.k8s.io (NOT networking.k8s.io)
+kubectl describe httproute web-route                 # conditions empty/"Waiting for controller" = GatewayClass has no controller (orphan) · ResolvedRefs=False/BackendNotFound = backendRefs Service missing (=503, fix the HTTPRoute)
+# Wiring: HTTPRoute.parentRefs.name -> Gateway.metadata.name ; Gateway.gatewayClassName -> GatewayClass ; GatewayClass.controllerName -> the running controller pods
+# Role split: GatewayClass(vendor, ~StorageClass) / Gateway(listener port+protocol+host, infra op) / HTTPRoute(path rules -> Service:port, developer)
+# Cross-ns TWO gates: Gateway.allowedRoutes.namespaces.from (Same|All|Selector, route->gateway attach) + ReferenceGrant in target ns (route->backend Service)
+```
+
 # Ingress Controllers & Resources (2.3)
 
 ```bash
