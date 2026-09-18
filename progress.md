@@ -194,5 +194,5 @@ _(Older sessions 2026-08-04 → 08-27 established: 1.1 RBAC, 1.2 kubeadm, 1.3 li
 overall% = Σ ( domain_weight × mastered_in_domain / total_in_domain )
 domains:  01=25%/8   02=20%/6   03=15%/5   04=10%/3   05=30%/5
 ```
-Current: 01=25%×5/8=15.6 · 02=20%×5/6=16.7 · 03=15%×5/5=15.0 · 04=10%×3/3=10.0 · 05=30%×5/5=30.0 → **~87.3% ≈ 87%**.
+Current: 01=25%×5/8=15.6 · 02=20%×6/6=20.0 · 03=15%×5/5=15.0 · 04=10%×3/3=10.0 · 05=30%×5/5=30.0 → **~90.6% ≈ 91%**.
 Bar = 20 cells, `round(% / 5)` filled. Update Overall + bar whenever a status changes.
