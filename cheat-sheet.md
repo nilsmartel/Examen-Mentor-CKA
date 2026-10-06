@@ -1,3 +1,15 @@
+# CRDs & Operators (1.8)
+
+```bash
+kubectl get crds                                     # all custom KINDS installed (CRD alone = inert storage, no behavior)
+kubectl get crd <plural.group> -o yaml               # schema/group/versions/scope; metadata.name MUST be <plural>.<group> (apiextensions enforces)
+kubectl api-resources | grep <group>                 # new kind + shortNames + apiVersion once CRD is installed
+kubectl explain <kind>.spec                          # works only after CRD installed (schema travels inside the CRD)
+kubectl logs -n <op-ns> <controller-pod>             # CR not reconciling but pod Running 1/1 -> hunt 403 Forbidden = missing operator RBAC
+kubectl auth can-i <verb> <res> --as=system:serviceaccount:<ns>:<sa>   # confirm the controller SA's permissions
+# Operator = CRDs + controller Deployment + RBAC(SA+ClusterRole/Binding). Wrong apiVersion -> kubectl discovery "no matches for kind"; wrong field type -> apiserver schema reject
+```
+
 # Gateway API (2.4)
 
 ```bash

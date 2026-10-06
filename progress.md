@@ -3,14 +3,15 @@
 > The mentor (Kube) maintains this file — the single source of truth for where the learner is.
 > Status: `⬜ Not started` · `🟡 In progress` · `✅ Mastered` (only ✅ counts). Overall % is **weighted by exam domain** (formula at bottom).
 
-## 📊 Overall: ~91% complete
+## 📊 Overall: ~94% complete
 
-`██████████████████░░` 24 / 27 lessons mastered · bar tracks **weighted %**, not raw count
+`███████████████████░` 25 / 27 lessons mastered · bar tracks **weighted %**, not raw count
 
-**Strong:** Troubleshooting (5/5 ✅) · Storage (3/3 ✅) · Workloads (5/5 ✅) · **Services & Networking (6/6 ✅ — DOMAIN COMPLETE)** · Cluster Architecture (5/8)
+**Strong:** Troubleshooting (5/5 ✅) · Storage (3/3 ✅) · Workloads (5/5 ✅) · **Services & Networking (6/6 ✅ — DOMAIN COMPLETE)** · Cluster Architecture (6/8)
 
-> ▶️ **NEXT SESSION:** **only Domain 01 remains — 3 lessons: 1.4 HA control plane, 1.6 Helm/Kustomize, 1.8 CRDs & operators.** Recommend **1.8 CRDs & operators** next — perfect continuity: today he installed the Gateway API *as a bundle of CRDs* live (`standard-install.yaml`), saw `get gatewayclass` fail with "server doesn't have a resource type" (the CRD-not-installed tell), and re-raised his old "is X a CRD?" curiosity (asked it about CSIDriver in 1.7). 1.8 explains *what he just did.* **Alt:** 1.6 Helm/Kustomize (guaranteed-earner, hands-on, pure imperative-speed) if he wants a break from API-machinery theory. 1.4 HA is the least exam-earning and hardest to reproduce on minikube — save for last / do as inspection + mental rehearsal.
-> ✅ Warm-up watch CLEARED: **single-pod-DNS-blind = EGRESS netpol** — 2026-09-14 he LED with egress. Direction owned; normal rotation.
+> ▶️ **NEXT SESSION:** **only 2 lessons left — 1.6 Helm/Kustomize & 1.4 HA control plane.** Recommend **1.6 Helm/Kustomize** next — guaranteed-earner, fully hands-on, pure imperative-speed (good contrast after two API-machinery sessions). **Save 1.4 HA for last** — least exam-earning and hardest to reproduce on minikube; do it as inspection + mental rehearsal of stacked-vs-external etcd + LB. After these two → Domain 01 complete = 100% coverage; pivot to timed retrieval / break-fix drills on the guaranteed earners.
+> ✅ Warm-up watch CLEARED: **single-pod-DNS-blind = EGRESS netpol** — 2026-10-06 LED with egress AGAIN (3rd clean). Direction fully owned.
+> ⚠️ Warm-up watch (1.3 kubeadm upgrade, re-ask cold): 2026-10-06 recovered the STRUCTURE (binary-first, apply-rewrites-static-pods, kubelet-separate, drain-protects-kubelet-so-after-apply all cold ✅) but still needed a nudge for the concrete **repo-file edit** (`/etc/apt/sources.list.d/kubernetes.list` → v1.35 + `apt-get update`) — knew the *why* (per-minor guardrail), not the *what*. Kept short interval.
 
 ---
 
